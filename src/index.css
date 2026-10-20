@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', Arial, system-ui, sans-serif;
+  background-color: #f8f3e9;
+  color: #2a2a25;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+::selection {
+  background-color: #704c12;
+  color: #f8f3e9;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #ebdbc6;
+}
+::-webkit-scrollbar-thumb {
+  background: #a06d3a;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #704c12;
+}
+
+/* Reading progress bar */
+.reading-progress {
+  transition: width 0.1s ease-out;
+}
+
+/* Highlight mark for adjectives */
+mark.adj-highlight {
+  background: linear-gradient(180deg, transparent 50%, #dcc09155 50%);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+mark.adj-right {
+  background: linear-gradient(180deg, transparent 50%, #b8d4c855 50%);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+mark.adj-left {
+  background: linear-gradient(180deg, transparent 50%, #d4b8b855 50%);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Smooth reveal on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
