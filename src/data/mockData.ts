@@ -280,55 +280,60 @@ export const valorScores: ValorScore[] = [
   },
 ];
 
-// ---- Support tiers ----
+// ---- Subscription Plans ----
 
-export interface SupportTier {
+export interface SubscriptionPlan {
   name: string;
   price: string;
+  priceLabel: string;
   description: string;
   features: string[];
   highlighted?: boolean;
   cta: string;
 }
 
-export const supportTiers: SupportTier[] = [
+export const subscriptionPlans: SubscriptionPlan[] = [
   {
-    name: 'Suscriptor Libre',
-    price: '0€',
-    description: 'Acceso completo al contenido como servicio público.',
+    name: 'Plan Básico',
+    price: '[Precio editable]',
+    priceLabel: '€/mes',
+    description: 'Acceso al contenido esencial como servicio público.',
     features: [
       'Lectura en 4 minutos cada día',
       'Escáner de Marcos completo',
       'Fichas de Impacto Práctico',
       'Newsletter semanal en tu correo',
     ],
-    cta: 'Suscribirme gratis',
+    cta: 'Elegir Plan Básico',
   },
   {
-    name: 'Miembro Colaborador',
-    price: '3€/mes',
-    description: 'Apoyas la independencia del proyecto de forma recurrente.',
+    name: 'Plan Medio',
+    price: '[Precio editable]',
+    priceLabel: '€/mes',
+    description: 'Apoyas el proyecto y accedes a contenido extendido.',
     features: [
-      'Todo lo del Suscriptor Libre',
+      'Todo lo del Plan Básico',
       'Acceso anticipado a piezas especiales',
       'Podcast mensual de análisis extendido',
-      'Tu nombre en la página de apoyo',
+      'Participación en la Comunidad de Socios',
       'Voto en las próximas temáticas a cubrir',
     ],
     highlighted: true,
-    cta: 'Hacerme miembro',
+    cta: 'Elegir Plan Medio',
   },
   {
-    name: 'Patrocinio Local',
-    price: 'Desde 50€/mes',
-    description: 'Para comercios y entidades de proximidad que creen en el proyecto.',
+    name: 'Plan Premium',
+    price: '[Precio editable]',
+    priceLabel: '€/mes',
+    description: 'Para quienes quieren apoyar el periodismo independiente al máximo.',
     features: [
-      'Todo lo del Miembro Colaborador',
-      'Mención de tu comercio local en la web',
-      'Una pieza encargada al año sobre tu sector',
-      'Reunión trimestral con el equipo editorial',
+      'Todo lo del Plan Medio',
+      'Acceso a archivo completo y ediciones especiales',
+      'Encuentros trimestrales con el equipo editorial',
+      'Mención como socio en la web',
+      'Pieza encargada al año sobre el tema que elijas',
       'Compromiso de no injerencia editorial',
     ],
-    cta: 'Hablar con el equipo',
+    cta: 'Elegir Plan Premium',
   },
 ];

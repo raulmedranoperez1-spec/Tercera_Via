@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import EscanerDeMarcos from '@/components/EscanerDeMarcos';
@@ -6,16 +6,20 @@ import FichaDeImpacto from '@/components/FichaDeImpacto';
 import SobreNosotros from '@/components/SobreNosotros';
 import CurvaDeValor from '@/components/CurvaDeValor';
 import Apoyo from '@/components/Apoyo';
+import ComunidadDeSocios from '@/components/ComunidadDeSocios';
 import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
+import AuthModal from '@/components/AuthModal';
+import ProjectSubmissionModal from '@/components/ProjectSubmissionModal';
 import { useScrollProgress } from '@/hooks/useReveal';
 
 function App() {
-  const subscribeRef = useRef<HTMLDivElement>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [submissionOpen, setSubmissionOpen] = useState(false);
   const progress = useScrollProgress();
 
-  const scrollToSubscribe = () => {
-    subscribeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const scrollToSection = (id: string) => {
+    document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -28,19 +32,31 @@ function App() {
         />
       </div>
 
-      <Header onSubscribeClick={scrollToSubscribe} />
+      <Header
+        onSubscribeClick={() => scrollToSection('#apoyo')}
+        onAuthClick={() => setAuthOpen(true)}
+        onSubmissionClick={() => setSubmissionOpen(true)}
+        onSobreNosotrosClick={() => scrollToSection('#sobre-nosotros')}
+      />
 
       <main>
-        <Hero subscribeRef={subscribeRef} />
+        <Hero
+          onSubmissionClick={() => setSubmissionOpen(true)}
+          onExploreClick={() => scrollToSection('#escaner')}
+        />
         <EscanerDeMarcos />
         <FichaDeImpacto />
         <CurvaDeValor />
-        <SobreNosotros />
+        <SobreNosotros onSubmissionClick={() => setSubmissionOpen(true)} />
+        <ComunidadDeSocios />
         <Apoyo />
       </main>
 
-      <Footer onSubscribeClick={scrollToSubscribe} />
+      <Footer onSubscribeClick={() => scrollToSection('#apoyo')} />
       <MobileNav />
+
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <ProjectSubmissionModal open={submissionOpen} onClose={() => setSubmissionOpen(false)} />
     </div>
   );
 }

@@ -1,11 +1,11 @@
-import { ScanLine, Home, BarChart3, Users, Heart } from 'lucide-react';
+import { ScanLine, Home, BarChart3, Users, Heart, MessageCircle } from 'lucide-react';
 
 const items = [
   { icon: Home, label: 'Inicio', href: '#top' },
   { icon: ScanLine, label: 'Escáner', href: '#escaner' },
   { icon: BarChart3, label: 'Curva', href: '#curva' },
-  { icon: Users, label: 'Nosotros', href: '#sobre-nosotros' },
-  { icon: Heart, label: 'Apoyo', href: '#apoyo' },
+  { icon: MessageCircle, label: 'Comunidad', href: '#comunidad' },
+  { icon: Heart, label: 'Planes', href: '#apoyo' },
 ];
 
 export default function MobileNav() {

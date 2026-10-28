@@ -1,115 +1,244 @@
-import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Menu, X, ChevronDown, Upload, LogIn, Newspaper, FileText, Mic, BookOpen, Users, GraduationCap, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface HeaderProps {
   onSubscribeClick: () => void;
+  onAuthClick: () => void;
+  onSubmissionClick: () => void;
+  onSobreNosotrosClick: () => void;
 }
 
-const navItems = [
-  { label: 'Escáner de Marcos', href: '#escaner' },
-  { label: 'Impacto Práctico', href: '#impacto' },
-  { label: 'Curva de Valor', href: '#curva' },
-  { label: 'Sobre Nosotros', href: '#sobre-nosotros' },
-  { label: 'Apóyanos', href: '#apoyo' },
+const formatos = [
+  { label: 'Artículos', icon: FileText, href: '#formatos' },
+  { label: 'Reportajes', icon: Newspaper, href: '#formatos' },
+  { label: 'Entrevistas', icon: Users, href: '#formatos' },
+  { label: 'Ensayos', icon: BookOpen, href: '#formatos' },
+  { label: 'Podcasts', icon: Mic, href: '#formatos' },
 ];
 
-export default function Header({ onSubscribeClick }: HeaderProps) {
-  const [open, setOpen] = useState(false);
+export default function Header({ onSubscribeClick, onAuthClick, onSubmissionClick, onSobreNosotrosClick }: HeaderProps) {
+  const { user, profile, signOut } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [formatosOpen, setFormatosOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const formatosRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const handleNavClick = (href: string) => {
-    setOpen(false);
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (formatosRef.current && !formatosRef.current.contains(e.target as Node)) {
+        setFormatosOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const scrollToSection = (href: string) => {
+    setMobileOpen(false);
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <>
-      <header className="sticky top-0 z-50 border-b border-paper-400/60 bg-paper-100/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          {/* Logo */}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-earth-800 text-2xl font-semibold text-paper-100 shadow-sm">
-              <span className="font-serif">3</span>
-            </span>
-            <span className="flex flex-col leading-none">
-              <span className="font-serif text-xl font-semibold text-earth-900">Tercera Vía</span>
-              <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">
-                La Tercera Vía
-              </span>
-            </span>
-          </a>
-
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-6 lg:flex">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(item.href);
-                }}
-                className="text-sm font-medium text-ink-600 transition-colors hover:text-earth-800"
+    <header className="sticky top-0 z-50 border-b border-paper-400/60 bg-paper-100/90 backdrop-blur-md">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        {/* Top row: desktop layout with 3 columns */}
+        <div className="flex items-center justify-between py-3">
+          {/* LEFT: Formatos + Sobre Nosotros */}
+          <div className="hidden flex-1 items-center gap-4 lg:flex">
+            <div ref={formatosRef} className="relative">
+              <button
+                onClick={() => setFormatosOpen(!formatosOpen)}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-paper-300 hover:text-earth-800"
               >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
+                Formatos
+                <ChevronDown size={16} className={`transition-transform ${formatosOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {formatosOpen && (
+                <div className="absolute left-0 top-full mt-2 w-56 rounded-xl border border-paper-400/60 bg-paper-50 p-2 shadow-lg animate-fade-in">
+                  {formatos.map((f) => {
+                    const Icon = f.icon;
+                    return (
+                      <a
+                        key={f.label}
+                        href={f.href}
+                        onClick={(e) => { e.preventDefault(); setFormatosOpen(false); scrollToSection(f.href); }}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink-600 transition-colors hover:bg-paper-200 hover:text-earth-800"
+                      >
+                        <Icon size={18} className="text-earth-700" />
+                        {f.label}
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <button
-              onClick={onSubscribeClick}
-              className="hidden rounded-full bg-earth-800 px-5 py-2 text-sm font-medium text-paper-100 shadow-sm transition-all hover:bg-earth-900 hover:shadow-md sm:inline-block"
+              onClick={onSobreNosotrosClick}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-paper-300 hover:text-earth-800"
             >
-              Suscribirme gratis
-            </button>
-            <button
-              onClick={() => setOpen(!open)}
-              className="rounded-lg p-2 text-earth-900 transition-colors hover:bg-paper-300 lg:hidden"
-              aria-label="Menú"
-            >
-              {open ? <X size={22} /> : <Menu size={22} />}
+              Sobre Nosotros
             </button>
           </div>
-        </div>
 
-        {/* Mobile drawer */}
-        {open && (
-          <nav className="border-t border-paper-400/60 bg-paper-100 px-4 py-4 lg:hidden">
-            <div className="flex flex-col gap-1">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(item.href);
-                  }}
-                  className="rounded-lg px-4 py-3 text-base font-medium text-ink-700 transition-colors hover:bg-paper-300"
+          {/* Mobile: hamburger */}
+          <div className="flex flex-1 items-center lg:hidden">
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="rounded-lg p-2 text-earth-900 transition-colors hover:bg-paper-300"
+              aria-label="Menú"
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+
+          {/* CENTER: Brand */}
+          <div className="flex flex-1 flex-col items-center">
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-earth-800 font-serif text-xl font-semibold text-paper-100 shadow-sm">
+                3
+              </span>
+              <span className="font-serif text-2xl font-semibold text-earth-900 sm:text-3xl">
+                La Tercera Vía
+              </span>
+            </a>
+            <button
+              onClick={onSubmissionClick}
+              className="mt-1.5 flex items-center gap-1.5 rounded-full bg-earth-800 px-4 py-1.5 text-xs font-medium text-paper-100 shadow-sm transition-all hover:bg-earth-900 hover:shadow-md sm:text-sm"
+            >
+              <Upload size={14} />
+              Sube aquí tu proyecto
+            </button>
+          </div>
+
+          {/* RIGHT: Suscribirme + Auth */}
+          <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
+            <button
+              onClick={onSubscribeClick}
+              className="rounded-full border border-earth-700 px-5 py-2 text-sm font-medium text-earth-800 transition-all hover:bg-earth-800 hover:text-paper-100"
+            >
+              Suscribirme
+            </button>
+            {user ? (
+              <div ref={userMenuRef} className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 rounded-full bg-earth-800 px-4 py-2 text-sm font-medium text-paper-100 transition-all hover:bg-earth-900"
                 >
-                  {item.label}
-                </a>
-              ))}
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-paper-100 text-xs font-semibold text-earth-800">
+                    {(profile?.display_name || user.email || '?').charAt(0).toUpperCase()}
+                  </span>
+                  <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-paper-400/60 bg-paper-50 p-3 shadow-lg animate-fade-in">
+                    <div className="mb-3 border-b border-paper-400/50 pb-3">
+                      <p className="text-sm font-medium text-earth-900">
+                        {profile?.display_name || 'Usuario'}
+                      </p>
+                      <p className="text-xs text-ink-400">{user.email}</p>
+                      <span className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                        profile?.role === 'creador'
+                          ? 'bg-accent-ok/15 text-accent-ok'
+                          : 'bg-earth-800/10 text-earth-800'
+                      }`}>
+                        {profile?.role === 'creador' ? <GraduationCap size={12} /> : <BookOpen size={12} />}
+                        {profile?.role === 'creador' ? 'Creador FCOM' : 'Lector'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => { setUserMenuOpen(false); signOut(); }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-600 transition-colors hover:bg-paper-200"
+                    >
+                      <LogOut size={16} />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
               <button
-                onClick={() => {
-                  setOpen(false);
-                  onSubscribeClick();
-                }}
-                className="mt-2 rounded-full bg-earth-800 px-5 py-3 text-base font-medium text-paper-100"
+                onClick={onAuthClick}
+                className="flex items-center gap-1.5 rounded-full bg-earth-800 px-5 py-2 text-sm font-medium text-paper-100 shadow-sm transition-all hover:bg-earth-900"
               >
-                Suscribirme gratis
+                <LogIn size={16} />
+                Iniciar sesión / Registrarte
               </button>
-            </div>
-          </nav>
-        )}
-      </header>
-    </>
+            )}
+          </div>
+
+          {/* Mobile: auth icon */}
+          <div className="flex flex-1 items-center justify-end lg:hidden">
+            {user ? (
+              <button
+                onClick={() => signOut()}
+                className="rounded-lg p-2 text-earth-900 transition-colors hover:bg-paper-300"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut size={20} />
+              </button>
+            ) : (
+              <button
+                onClick={onAuthClick}
+                className="rounded-lg p-2 text-earth-900 transition-colors hover:bg-paper-300"
+                aria-label="Iniciar sesión"
+              >
+                <LogIn size={20} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <nav className="border-t border-paper-400/60 bg-paper-100 px-4 py-4 lg:hidden">
+          <div className="flex flex-col gap-1">
+            {/* Formatos label */}
+            <p className="px-4 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-ink-400">Formatos</p>
+            {formatos.map((f) => {
+              const Icon = f.icon;
+              return (
+                <a
+                  key={f.label}
+                  href={f.href}
+                  onClick={(e) => { e.preventDefault(); scrollToSection(f.href); }}
+                  className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-base font-medium text-ink-700 transition-colors hover:bg-paper-300"
+                >
+                  <Icon size={18} className="text-earth-700" />
+                  {f.label}
+                </a>
+              );
+            })}
+            <button
+              onClick={() => { setMobileOpen(false); onSobreNosotrosClick(); }}
+              className="rounded-lg px-4 py-2.5 text-left text-base font-medium text-ink-700 transition-colors hover:bg-paper-300"
+            >
+              Sobre Nosotros
+            </button>
+            <button
+              onClick={() => { setMobileOpen(false); onSubscribeClick(); }}
+              className="mt-2 rounded-full border border-earth-700 px-5 py-2.5 text-base font-medium text-earth-800"
+            >
+              Suscribirme
+            </button>
+            <button
+              onClick={() => { setMobileOpen(false); onSubmissionClick(); }}
+              className="rounded-full bg-earth-800 px-5 py-2.5 text-base font-medium text-paper-100"
+            >
+              Sube aquí tu proyecto
+            </button>
+          </div>
+        </nav>
+      )}
+    </header>
   );
 }
