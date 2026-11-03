@@ -101,13 +101,10 @@ export default function Header({ onSubscribeClick, onAuthClick, onSubmissionClic
             <a
               href="#"
               onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex items-center gap-2 transition-opacity hover:opacity-80"
+              className="flex items-center transition-opacity hover:opacity-80"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-earth-800 font-serif text-xl font-semibold text-paper-100 shadow-sm">
                 3
-              </span>
-              <span className="font-serif text-2xl font-semibold text-earth-900 sm:text-3xl">
-                La Tercera Vía
               </span>
             </a>
             <button
