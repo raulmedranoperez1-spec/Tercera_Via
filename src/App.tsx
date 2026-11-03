@@ -7,7 +7,6 @@ import SobreNosotros from '@/components/SobreNosotros';
 import CurvaDeValor from '@/components/CurvaDeValor';
 import Apoyo from '@/components/Apoyo';
 import Footer from '@/components/Footer';
-import MobileNav from '@/components/MobileNav';
 import { useScrollProgress } from '@/hooks/useReveal';
 
 function App() {
@@ -28,7 +27,7 @@ function App() {
         />
       </div>
 
-      <Header onSubscribeClick={scrollToSubscribe} />
+      <Header />
 
       <main>
         <Hero subscribeRef={subscribeRef} />
@@ -40,7 +39,6 @@ function App() {
       </main>
 
       <Footer onSubscribeClick={scrollToSubscribe} />
-      <MobileNav />
     </div>
   );
 }
