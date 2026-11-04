@@ -284,7 +284,8 @@ export const valorScores: ValorScore[] = [
 
 export interface SupportTier {
   name: string;
-  price: string;
+  monthly: number;
+  annual: number;
   description: string;
   features: string[];
   highlighted?: boolean;
@@ -293,42 +294,70 @@ export interface SupportTier {
 
 export const supportTiers: SupportTier[] = [
   {
-    name: 'Suscriptor Libre',
-    price: '0€',
-    description: 'Acceso completo al contenido como servicio público.',
+    name: 'Socio Mensual',
+    monthly: 1.5,
+    annual: 15,
+    description: 'Apoyo mínimo recurrente para sostener el proyecto.',
     features: [
       'Lectura en 4 minutos cada día',
       'Escáner de Marcos completo',
       'Fichas de Impacto Práctico',
       'Newsletter semanal en tu correo',
     ],
-    cta: 'Suscribirme gratis',
+    cta: 'Hacerme socio',
   },
   {
-    name: 'Miembro Colaborador',
-    price: '3€/mes',
-    description: 'Apoyas la independencia del proyecto de forma recurrente.',
+    name: 'Básica',
+    monthly: 1.5,
+    annual: 15,
+    description: 'Suscripción básica con acceso completo al contenido.',
     features: [
-      'Todo lo del Suscriptor Libre',
+      'Todo lo de Socio Mensual',
       'Acceso anticipado a piezas especiales',
+      'Newsletter diaria en tu correo',
+      'Archivo completo de artículos',
+    ],
+    cta: 'Suscribirme',
+  },
+  {
+    name: 'Media',
+    monthly: 2.5,
+    annual: 25,
+    description: 'Suscripción intermedia con beneficios adicionales.',
+    features: [
+      'Todo lo de la Básica',
       'Podcast mensual de análisis extendido',
       'Tu nombre en la página de apoyo',
       'Voto en las próximas temáticas a cubrir',
     ],
     highlighted: true,
-    cta: 'Hacerme miembro',
+    cta: 'Suscribirme',
   },
   {
-    name: 'Patrocinio Local',
-    price: 'Desde 50€/mes',
-    description: 'Para comercios y entidades de proximidad que creen en el proyecto.',
+    name: 'Premium',
+    monthly: 3.5,
+    annual: 35,
+    description: 'Suscripción premium con acceso a contenido exclusivo.',
     features: [
-      'Todo lo del Miembro Colaborador',
-      'Mención de tu comercio local en la web',
-      'Una pieza encargada al año sobre tu sector',
+      'Todo lo de la Media',
+      'Piezas de investigación exclusivas',
+      'Reportajes mensuales a fondo',
+      'Acceso al archivo multimedia',
+    ],
+    cta: 'Suscribirme',
+  },
+  {
+    name: 'Premium + Socio',
+    monthly: 5,
+    annual: 50,
+    description: 'La suscripción más completa. Máximo apoyo al proyecto.',
+    features: [
+      'Todo lo del Premium',
       'Reunión trimestral con el equipo editorial',
+      'Mención destacada en la página de apoyo',
+      'Acceso a eventos y entrevistas en directo',
       'Compromiso de no injerencia editorial',
     ],
-    cta: 'Hablar con el equipo',
+    cta: 'Suscribirme',
   },
 ];

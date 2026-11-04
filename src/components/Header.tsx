@@ -23,7 +23,7 @@ const styleItems: MenuItem[] = [
   { label: 'Código deontológico', href: '#sobre-nosotros' },
 ];
 
-const subscriptionItems = ['Básica', 'Media', 'Premium', 'Socios', 'Crowdfunding'];
+const subscriptionItems = ['Socio Mensual', 'Básica', 'Media', 'Premium', 'Premium + Socio'];
 
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
