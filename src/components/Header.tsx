@@ -1,100 +1,58 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { BookOpen, ChevronDown, LogIn, LogOut, UserPlus, X, BadgeCheck } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, ChevronDown, LogOut, BadgeCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useModal } from '@/lib/modalContext';
+import { navigateTo, sectionHref, type SectionPath } from '@/lib/router';
 import BrandLogo from '@/components/BrandLogo';
+import ModalShell from '@/components/ModalShell';
 
 interface MenuItem {
   label: string;
-  href?: string;
+  path: SectionPath;
 }
 
-type Modal = 'project' | 'auth' | null;
-type AuthMode = 'login' | 'signup';
-
 const formatItems: MenuItem[] = [
-  { label: 'Artículos', href: '#formatos' },
-  { label: 'Ensayos', href: '#formatos' },
-  { label: 'Entrevistas', href: '#formatos' },
-  { label: 'Podcast', href: '#formatos' },
-  { label: 'Reportajes', href: '#formatos' },
+  { label: 'Artículos', path: '/escaner' },
+  { label: 'Ensayos', path: '/escaner' },
+  { label: 'Entrevistas', path: '/escaner' },
+  { label: 'Podcast', path: '/escaner' },
+  { label: 'Reportajes', path: '/escaner' },
 ];
 
 const styleItems: MenuItem[] = [
-  { label: 'Normas de escritura', href: '#apoyo' },
-  { label: 'Código deontológico', href: '#apoyo' },
+  { label: 'Normas de escritura', path: '/apoyo' },
+  { label: 'Código deontológico', path: '/apoyo' },
 ];
 
 const subscriptionItems = ['Socio Mensual', 'Básica', 'Media', 'Premium', 'Premium + Socio'];
 
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [modal, setModal] = useState<Modal>(null);
-  const [authMode, setAuthMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [authMessage, setAuthMessage] = useState('');
-  const [authError, setAuthError] = useState('');
+  const [showProject, setShowProject] = useState(false);
   const { user, email: userEmail, isCollaborator, loading: authLoading } = useAuth();
+  const { open } = useModal();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setOpenMenu(null);
   };
 
-  const closeModal = () => {
-    setModal(null);
-    setAuthMessage('');
-    setAuthError('');
-    setEmail('');
-    setPassword('');
-  };
-
-  const scrollTo = (href: string) => {
+  const goTo = (path: SectionPath) => {
     setOpenMenu(null);
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    navigateTo(path);
   };
 
-  const openAuth = (mode: AuthMode) => {
-    setAuthMode(mode);
+  const openAuth = (mode: 'login' | 'signup') => {
     setOpenMenu(null);
-    setModal('auth');
-    setAuthMessage('');
-    setAuthError('');
-  };
-
-  const handleAuth = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setAuthError('');
-    setAuthMessage('');
-
-    const result = authMode === 'login'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
-
-    if (result.error) {
-      setAuthError('No se pudo completar la operación. Revisa tus datos e inténtalo de nuevo.');
-      return;
-    }
-
-    setAuthMessage(authMode === 'login'
-      ? 'Has iniciado sesión correctamente.'
-      : 'Tu cuenta se ha creado correctamente.');
-    setPassword('');
-
-    setTimeout(() => closeModal(), 1200);
+    open({ kind: 'auth', mode });
   };
 
   return (
     <header className="sticky top-0 z-50 border-b border-brand-graphite bg-brand-earth text-brand-paper shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex justify-center pt-3">
-          <a
-            href="#"
-            onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="transition-opacity hover:opacity-80"
-            aria-label="Volver al inicio"
-          >
+          <a href={sectionHref('/')} className="transition-opacity hover:opacity-80" aria-label="Volver al inicio">
             <BrandLogo />
           </a>
         </div>
@@ -111,7 +69,7 @@ export default function Header() {
                 <ChevronDown size={15} className={`transition-transform ${openMenu === 'formatos' ? 'rotate-180' : ''}`} />
               </button>
               {openMenu === 'formatos' && (
-                <Dropdown items={formatItems} onSelect={scrollTo} />
+                <Dropdown items={formatItems} onSelect={goTo} />
               )}
             </div>
             <div className="relative">
@@ -124,7 +82,7 @@ export default function Header() {
                 <ChevronDown size={15} className={`transition-transform ${openMenu === 'estilo' ? 'rotate-180' : ''}`} />
               </button>
               {openMenu === 'estilo' && (
-                <Dropdown items={styleItems} onSelect={scrollTo} />
+                <Dropdown items={styleItems} onSelect={goTo} />
               )}
             </div>
           </div>
@@ -179,7 +137,7 @@ export default function Header() {
                   {subscriptionItems.map((item) => (
                     <button
                       key={item}
-                      onClick={() => scrollTo('#apoyo')}
+                      onClick={() => goTo('/apoyo')}
                       className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white"
                     >
                       {item}
@@ -193,7 +151,7 @@ export default function Header() {
 
         <div className="flex flex-wrap items-center justify-center gap-2 border-t border-brand-graphite py-2 sm:justify-between">
           <button
-            onClick={() => setModal('project')}
+            onClick={() => setShowProject(true)}
             className="rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-sand transition-colors hover:bg-brand-graphite hover:text-brand-white"
           >
             Sobre el proyecto
@@ -214,8 +172,8 @@ export default function Header() {
         </div>
       </div>
 
-      {modal === 'project' && (
-        <ModalShell title="Sobre el proyecto" onClose={closeModal}>
+      {showProject && (
+        <ModalShell title="Sobre el proyecto" onClose={() => setShowProject(false)}>
           <div className="space-y-5 text-sm leading-relaxed text-black/70">
             <section>
               <h3 className="font-serif text-xl font-semibold text-black">Nuestro objetivo</h3>
@@ -232,57 +190,19 @@ export default function Header() {
           </div>
         </ModalShell>
       )}
-
-      {modal === 'auth' && (
-        <ModalShell title={authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'} onClose={closeModal}>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <label className="block text-sm font-medium text-black/70">
-              Correo electrónico
-              <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 w-full rounded-lg border border-black/15 px-4 py-3 text-black outline-none focus:border-[#a87945]" placeholder="tu@correo.com" />
-            </label>
-            <label className="block text-sm font-medium text-black/70">
-              Contraseña
-              <input type="password" required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-black/15 px-4 py-3 text-black outline-none focus:border-[#a87945]" placeholder="Mínimo 6 caracteres" />
-            </label>
-            {authError && <p className="text-sm text-red-700">{authError}</p>}
-            {authMessage && <p className="text-sm text-green-700">{authMessage}</p>}
-            <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black">
-              {authMode === 'login' ? <LogIn size={17} /> : <UserPlus size={17} />}
-              {authMode === 'login' ? 'Entrar' : 'Registrarme'}
-            </button>
-            <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} className="w-full text-sm text-black/60 underline underline-offset-4 hover:text-black">
-              {authMode === 'login' ? '¿No tienes cuenta? Crear cuenta' : '¿Ya tienes cuenta? Iniciar sesión'}
-            </button>
-          </form>
-        </ModalShell>
-      )}
     </header>
   );
 }
 
-function Dropdown({ items, onSelect }: { items: MenuItem[]; onSelect: (href: string) => void }) {
+function Dropdown({ items, onSelect }: { items: MenuItem[]; onSelect: (path: SectionPath) => void }) {
   return (
     <div className="absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-brand-sand/20 bg-brand-graphite p-2 shadow-2xl">
       {items.map((item) => (
-        <button key={item.label} onClick={() => item.href && onSelect(item.href)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white">
+        <button key={item.label} onClick={() => onSelect(item.path)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white">
           <BookOpen size={15} className="text-brand-sand" />
           {item.label}
         </button>
       ))}
-    </div>
-  );
-}
-
-function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-[#f7f1e7] p-6 shadow-2xl sm:p-8">
-        <button onClick={onClose} className="absolute right-4 top-4 rounded-full p-2 text-black/50 transition-colors hover:bg-black/10 hover:text-black" aria-label="Cerrar">
-          <X size={20} />
-        </button>
-        <h2 className="mb-6 pr-8 font-serif text-3xl font-semibold text-black">{title}</h2>
-        {children}
-      </div>
     </div>
   );
 }

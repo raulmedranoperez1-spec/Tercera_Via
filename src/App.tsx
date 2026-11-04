@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import type { ReactNode } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import EscanerDeMarcos from '@/components/EscanerDeMarcos';
@@ -6,15 +6,21 @@ import FichaDeImpacto from '@/components/FichaDeImpacto';
 import Apoyo from '@/components/Apoyo';
 import Contacto from '@/components/Contacto';
 import Footer from '@/components/Footer';
+import MobileNav from '@/components/MobileNav';
+import { toSectionPath, useRoute, type SectionPath } from '@/lib/router';
 import { useScrollProgress } from '@/hooks/useReveal';
 
-function App() {
-  const subscribeRef = useRef<HTMLDivElement>(null);
-  const progress = useScrollProgress();
+const SECTION_VIEWS: Record<SectionPath, ReactNode> = {
+  '/': <Hero />,
+  '/escaner': <EscanerDeMarcos />,
+  '/impacto': <FichaDeImpacto />,
+  '/apoyo': <Apoyo />,
+  '/contacto': <Contacto />,
+};
 
-  const scrollToSubscribe = () => {
-    subscribeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
+function App() {
+  const progress = useScrollProgress();
+  const current = toSectionPath(useRoute());
 
   return (
     <div id="top" className="min-h-screen bg-paper-100 pb-16 lg:pb-0">
@@ -29,14 +35,13 @@ function App() {
       <Header />
 
       <main>
-        <Hero subscribeRef={subscribeRef} />
-        <EscanerDeMarcos />
-        <FichaDeImpacto />
-        <Apoyo />
-        <Contacto />
+        <div key={current} className="animate-fade-up">
+          {SECTION_VIEWS[current]}
+        </div>
       </main>
 
-      <Footer onSubscribeClick={scrollToSubscribe} />
+      <Footer />
+      <MobileNav current={current} />
     </div>
   );
 }
