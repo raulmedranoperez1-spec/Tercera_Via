@@ -42,8 +42,6 @@ export default function Footer({ onSubscribeClick }: FooterProps) {
               {[
                 { label: 'Escáner de Marcos', href: '#escaner' },
                 { label: 'Impacto Práctico', href: '#impacto' },
-                { label: 'Curva de Valor', href: '#curva' },
-                { label: 'Sobre Nosotros', href: '#sobre-nosotros' },
                 { label: 'Apóyanos', href: '#apoyo' },
               ].map((item) => (
                 <li key={item.href}>

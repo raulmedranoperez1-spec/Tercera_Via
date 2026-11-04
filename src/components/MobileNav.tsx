@@ -1,10 +1,9 @@
-import { ScanLine, Home, BarChart3, Users, Heart } from 'lucide-react';
+import { ScanLine, Home, Heart, Briefcase } from 'lucide-react';
 
 const items = [
   { icon: Home, label: 'Inicio', href: '#top' },
   { icon: ScanLine, label: 'Escáner', href: '#escaner' },
-  { icon: BarChart3, label: 'Curva', href: '#curva' },
-  { icon: Users, label: 'Nosotros', href: '#sobre-nosotros' },
+  { icon: Briefcase, label: 'Impacto', href: '#impacto' },
   { icon: Heart, label: 'Apoyo', href: '#apoyo' },
 ];
 

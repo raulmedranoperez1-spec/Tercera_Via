@@ -1,6 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { BookOpen, ChevronDown, LogIn, Mail, UserPlus, X } from 'lucide-react';
+import { BookOpen, ChevronDown, LogIn, LogOut, Mail, UserPlus, X, BadgeCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import BrandLogo from '@/components/BrandLogo';
 
 interface MenuItem {
   label: string;
@@ -19,8 +21,8 @@ const formatItems: MenuItem[] = [
 ];
 
 const styleItems: MenuItem[] = [
-  { label: 'Normas de escritura', href: '#sobre-nosotros' },
-  { label: 'Código deontológico', href: '#sobre-nosotros' },
+  { label: 'Normas de escritura', href: '#apoyo' },
+  { label: 'Código deontológico', href: '#apoyo' },
 ];
 
 const subscriptionItems = ['Socio Mensual', 'Básica', 'Media', 'Premium', 'Premium + Socio'];
@@ -38,6 +40,12 @@ export default function Header() {
   const [contactText, setContactText] = useState('');
   const [contactMessage, setContactMessage] = useState('');
   const [contactError, setContactError] = useState('');
+  const { user, email: userEmail, isCollaborator, loading: authLoading } = useAuth();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setOpenMenu(null);
+  };
 
   const closeModal = () => {
     setModal(null);
@@ -105,11 +113,26 @@ export default function Header() {
       ? 'Has iniciado sesión correctamente.'
       : 'Tu cuenta se ha creado correctamente.');
     setPassword('');
+
+    if (!result.error) {
+      setTimeout(() => closeModal(), 1200);
+    }
   };
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-black text-white shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex justify-center pt-3">
+          <a
+            href="#"
+            onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            className="transition-opacity hover:opacity-80"
+            aria-label="Volver al inicio"
+          >
+            <BrandLogo />
+          </a>
+        </div>
+
         <div className="flex min-h-[76px] flex-wrap items-center justify-between gap-3 py-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="relative">
@@ -140,28 +163,42 @@ export default function Header() {
             </div>
           </div>
 
-          <a
-            href="#"
-            onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="order-first flex items-center gap-2 transition-opacity hover:opacity-80 sm:order-none"
-            aria-label="Volver al inicio"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#a87945] font-serif text-xl font-semibold text-black shadow-sm">3</span>
-          </a>
-
           <div className="flex items-center gap-1 sm:gap-2">
-            <button
-              onClick={() => openAuth('login')}
-              className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:block sm:px-3 sm:text-sm"
-            >
-              Iniciar sesión
-            </button>
-            <button
-              onClick={() => openAuth('signup')}
-              className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:block sm:px-3 sm:text-sm"
-            >
-              Crear cuenta
-            </button>
+            {!authLoading && user ? (
+              <div className="flex items-center gap-2">
+                {isCollaborator && (
+                  <span className="hidden items-center gap-1 rounded-full bg-[#a87945]/20 px-2.5 py-1 text-xs font-semibold text-[#d6ae79] sm:flex">
+                    <BadgeCheck size={13} />
+                    Colaborador
+                  </span>
+                )}
+                <span className="hidden max-w-[160px] truncate text-xs text-white/60 sm:block">
+                  {userEmail}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:px-3 sm:text-sm"
+                >
+                  <LogOut size={14} />
+                  Salir
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => openAuth('login')}
+                  className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:block sm:px-3 sm:text-sm"
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  onClick={() => openAuth('signup')}
+                  className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:block sm:px-3 sm:text-sm"
+                >
+                  Crear cuenta
+                </button>
+              </>
+            )}
             <div className="relative">
               <button
                 onClick={() => setOpenMenu(openMenu === 'suscripcion' ? null : 'suscripcion')}
@@ -202,8 +239,17 @@ export default function Header() {
             Contacto
           </button>
           <div className="flex gap-2 sm:hidden">
-            <button onClick={() => openAuth('login')} className="rounded-md px-2 py-1.5 text-xs text-white/75 hover:bg-white/10">Iniciar sesión</button>
-            <button onClick={() => openAuth('signup')} className="rounded-md px-2 py-1.5 text-xs text-white/75 hover:bg-white/10">Crear cuenta</button>
+            {user ? (
+              <button onClick={handleLogout} className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-white/75 hover:bg-white/10">
+                <LogOut size={12} />
+                Salir
+              </button>
+            ) : (
+              <>
+                <button onClick={() => openAuth('login')} className="rounded-md px-2 py-1.5 text-xs text-white/75 hover:bg-white/10">Iniciar sesión</button>
+                <button onClick={() => openAuth('signup')} className="rounded-md px-2 py-1.5 text-xs text-white/75 hover:bg-white/10">Crear cuenta</button>
+              </>
+            )}
           </div>
         </div>
       </div>

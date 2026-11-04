@@ -3,8 +3,6 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import EscanerDeMarcos from '@/components/EscanerDeMarcos';
 import FichaDeImpacto from '@/components/FichaDeImpacto';
-import SobreNosotros from '@/components/SobreNosotros';
-import CurvaDeValor from '@/components/CurvaDeValor';
 import Apoyo from '@/components/Apoyo';
 import Footer from '@/components/Footer';
 import { useScrollProgress } from '@/hooks/useReveal';
@@ -33,8 +31,6 @@ function App() {
         <Hero subscribeRef={subscribeRef} />
         <EscanerDeMarcos />
         <FichaDeImpacto />
-        <CurvaDeValor />
-        <SobreNosotros />
         <Apoyo />
       </main>
 
