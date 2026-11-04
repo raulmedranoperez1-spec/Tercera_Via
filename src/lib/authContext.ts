@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { Session } from '@supabase/supabase-js';
 
-export type AppRole = 'lector' | 'creador' | 'editor' | 'admin';
+export type AppRole = 'lector' | 'colaborador' | 'equipo_editorial';
 
 export interface Profile {
   id: string;
@@ -16,7 +16,6 @@ export interface AuthState {
   profile: Profile | null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
-  setDemoProfile: (role: 'lector' | 'creador', socio: boolean) => Promise<string | null>;
   signOut: () => Promise<void>;
 }
 
@@ -30,12 +29,10 @@ export function useAuth(): AuthState {
 
 export function roleLabel(role: AppRole): string {
   switch (role) {
-    case 'creador':
-      return 'Alumno / Creador';
-    case 'editor':
-      return 'Editor';
-    case 'admin':
-      return 'Administrador';
+    case 'colaborador':
+      return 'Colaborador';
+    case 'equipo_editorial':
+      return 'Equipo editorial';
     default:
       return 'Lector / Suscriptor';
   }

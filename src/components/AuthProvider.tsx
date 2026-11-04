@@ -48,24 +48,14 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     if (session) await loadProfile(session.user.id);
   }, [session, loadProfile]);
 
-  const setDemoProfile = useCallback(async (role: 'lector' | 'creador', socio: boolean) => {
-    const { data, error } = await supabase.rpc('demo_set_profile', {
-      p_role: role,
-      p_socio: socio,
-    });
-    if (error || !data) return 'No se pudo cambiar el modo de prueba. Inténtalo de nuevo.';
-    setProfile(data as Profile);
-    return null;
-  }, []);
-
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setProfile(null);
   }, []);
 
   const value = useMemo(
-    () => ({ session, profile, loading, refreshProfile, setDemoProfile, signOut }),
-    [session, profile, loading, refreshProfile, setDemoProfile, signOut]
+    () => ({ session, profile, loading, refreshProfile, signOut }),
+    [session, profile, loading, refreshProfile, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

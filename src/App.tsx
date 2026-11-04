@@ -4,6 +4,7 @@ import Hero from '@/components/Hero';
 import EscanerDeMarcos from '@/components/EscanerDeMarcos';
 import FichaDeImpacto from '@/components/FichaDeImpacto';
 import Apoyo from '@/components/Apoyo';
+import Contacto from '@/components/Contacto';
 import Footer from '@/components/Footer';
 import { useScrollProgress } from '@/hooks/useReveal';
 
@@ -32,6 +33,7 @@ function App() {
         <EscanerDeMarcos />
         <FichaDeImpacto />
         <Apoyo />
+        <Contacto />
       </main>
 
       <Footer onSubscribeClick={scrollToSubscribe} />

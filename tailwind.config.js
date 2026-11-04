@@ -42,6 +42,13 @@ export default {
           900: '#1c1c19',
           950: '#0f0f0d',
         },
+        brand: {
+          earth: '#704c12',
+          graphite: '#5d432c',
+          sand: '#ebdbc6',
+          paper: '#f8f3e9',
+          white: '#ffffff',
+        },
         accent: {
           ok: '#3f7d5e',
           warn: '#c08a3e',

@@ -46,14 +46,14 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
     );
   }
 
-  if (profile.role !== 'creador') {
+  if (profile.role !== 'colaborador') {
     return (
       <ModalShell title="Comparte tu trabajo" onClose={onClose}>
         <p className="text-sm leading-relaxed text-black/70">
-          Solo las cuentas con correo institucional (@alum.us.es o @us.es) pueden publicar. Si quieres probar el modo creador, cámbialo desde Mi cuenta.
+          Solo las cuentas con correo institucional (terminado en @alum.us.es) pueden publicar. Con tu correo actual tienes acceso de lector.
         </p>
-        <button type="button" onClick={() => open({ kind: 'account' })} className="mt-6 w-full rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black">
-          Abrir Mi cuenta
+        <button type="button" onClick={onClose} className="mt-6 w-full rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black">
+          Entendido
         </button>
       </ModalShell>
     );

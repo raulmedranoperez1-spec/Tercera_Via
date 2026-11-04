@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Mail, CheckCircle2, AlertCircle, Loader2, Clock } from 'lucide-react';
+import { Mail, CheckCircle2, AlertCircle, Loader2, Clock, ArrowRight, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/authContext';
+import { useModal } from '@/lib/modalContext';
 
 interface HeroProps {
   subscribeRef: React.RefObject<HTMLDivElement>;
@@ -10,6 +12,9 @@ export default function Hero({ subscribeRef }: HeroProps) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const { profile } = useAuth();
+  const { open } = useModal();
+  const isCollaborator = profile?.role === 'colaborador' || profile?.role === 'equipo_editorial';
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -87,6 +92,28 @@ export default function Hero({ subscribeRef }: HeroProps) {
                 <CheckCircle2 size={16} className="text-accent-ok" />
                 Fuentes primarias
               </span>
+            </div>
+
+            <div className="mt-10">
+              {isCollaborator ? (
+                <button
+                  type="button"
+                  onClick={() => open({ kind: 'share' })}
+                  className="group inline-flex items-center gap-3 rounded-xl bg-earth-800 px-6 py-4 text-base font-semibold uppercase tracking-wide text-paper-100 shadow-sm transition-all hover:bg-earth-900 hover:shadow-md"
+                >
+                  <Send size={18} />
+                  Comparte tu trabajo
+                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                </button>
+              ) : (
+                <a
+                  href="#escaner"
+                  className="group inline-flex items-center gap-3 rounded-xl bg-earth-800 px-6 py-4 text-base font-semibold uppercase tracking-wide text-paper-100 shadow-sm transition-all hover:bg-earth-900 hover:shadow-md"
+                >
+                  Infórmate sin sesgos
+                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                </a>
+              )}
             </div>
           </div>
 
