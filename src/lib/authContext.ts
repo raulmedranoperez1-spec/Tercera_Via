@@ -9,6 +9,9 @@ export interface Profile {
   role: AppRole;
   display_name: string | null;
   is_socio: boolean;
+  username: string | null;
+  bio: string | null;
+  avatar_url: string | null;
 }
 
 export interface AuthState {

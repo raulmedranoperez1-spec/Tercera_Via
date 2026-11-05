@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import AuthModal from '@/components/AuthModal';
 import AccountModal from '@/components/AccountModal';
 import SubmitWorkModal from '@/components/SubmitWorkModal';
+import EditProfileModal from '@/components/EditProfileModal';
 import { ModalContext, type ModalRequest } from '@/lib/modalContext';
 
 export default function ModalProvider({ children }: { children: ReactNode }) {
@@ -18,6 +19,7 @@ export default function ModalProvider({ children }: { children: ReactNode }) {
         <AuthModal key={request.mode} initialMode={request.mode} onClose={close} />
       )}
       {request?.kind === 'account' && <AccountModal onClose={close} />}
+      {request?.kind === 'edit-profile' && <EditProfileModal onClose={close} />}
       {request?.kind === 'share' && (
         <SubmitWorkModal
           formatSlug={request.formatSlug}

@@ -48,3 +48,16 @@ export function findFormat(slug: string): FormatDef | undefined {
 export function trackLabel(value: string): string {
   return TRACK_OPTIONS.find((track) => track.value === value)?.label ?? value;
 }
+
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+export function formatDuration(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+  const mmss = `${String(minutes).padStart(hours ? 2 : 1, '0')}:${String(seconds).padStart(2, '0')}`;
+  return hours ? `${hours}:${mmss}` : mmss;
+}

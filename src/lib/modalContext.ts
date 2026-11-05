@@ -4,6 +4,7 @@ import type { FormatSlug } from '@/lib/formats';
 export type ModalRequest =
   | { kind: 'auth'; mode: 'login' | 'signup' }
   | { kind: 'account' }
+  | { kind: 'edit-profile' }
   | { kind: 'share'; formatSlug?: FormatSlug; onSubmitted?: () => void };
 
 export interface ModalControls {
