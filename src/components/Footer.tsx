@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ShieldCheck, Mail } from 'lucide-react';
 import { sectionHref } from '@/lib/router';
 import ModalShell from '@/components/ModalShell';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function Footer() {
   const [showProject, setShowProject] = useState(false);
@@ -12,9 +13,7 @@ export default function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-100 font-serif text-2xl font-semibold text-earth-900">
-                3
-              </span>
+              <BrandLogo className="h-12 w-12" />
               <span className="font-serif text-xl font-semibold text-paper-100">
                 Tercera Vía
               </span>
