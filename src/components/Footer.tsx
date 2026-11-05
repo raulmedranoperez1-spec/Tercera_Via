@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { ShieldCheck, Mail } from 'lucide-react';
 import { sectionHref } from '@/lib/router';
+import ModalShell from '@/components/ModalShell';
 
 export default function Footer() {
+  const [showProject, setShowProject] = useState(false);
+
   return (
     <footer className="border-t border-paper-400/60 bg-earth-950 text-paper-300">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-100 font-serif text-2xl font-semibold text-earth-900">
@@ -26,11 +29,10 @@ export default function Footer() {
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-paper-100 px-5 py-2.5 text-sm font-medium text-earth-900 transition-all hover:bg-paper-200"
             >
               <Mail size={16} />
-              Suscribirme gratis
+              Registrarme gratis
             </a>
           </div>
 
-          {/* Links */}
           <div>
             <h4 className="mb-4 font-serif text-base font-semibold text-paper-100">
               Secciones
@@ -51,10 +53,18 @@ export default function Footer() {
                   </a>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setShowProject(true)}
+                  className="text-paper-400 transition-colors hover:text-paper-100"
+                >
+                  Sobre el proyecto
+                </button>
+              </li>
             </ul>
           </div>
 
-          {/* Verification */}
           <div>
             <h4 className="mb-4 font-serif text-base font-semibold text-paper-100">
               Verificación
@@ -86,6 +96,25 @@ export default function Footer() {
           </p>
         </div>
       </div>
+
+      {showProject && (
+        <ModalShell title="Sobre el proyecto" onClose={() => setShowProject(false)}>
+          <div className="space-y-5 text-sm leading-relaxed text-black/70">
+            <section>
+              <h3 className="font-serif text-xl font-semibold text-black">Nuestro objetivo</h3>
+              <p className="mt-2">Queremos ofrecer un periodismo independiente, riguroso y útil que ayude a comprender la actualidad sin ruido ni polarización.</p>
+            </section>
+            <section>
+              <h3 className="font-serif text-xl font-semibold text-black">Qué proponemos</h3>
+              <p className="mt-2">Contrastamos marcos informativos, verificamos los hechos y acercamos las fuentes primarias para que cada persona pueda formarse su propia opinión.</p>
+            </section>
+            <section>
+              <h3 className="font-serif text-xl font-semibold text-black">Quiénes somos</h3>
+              <p className="mt-2">Somos estudiantes de Periodismo de la Facultad de Comunicación de la Universidad de Sevilla, unidos por la voluntad de construir un medio joven y responsable.</p>
+            </section>
+          </div>
+        </ModalShell>
+      )}
     </footer>
   );
 }

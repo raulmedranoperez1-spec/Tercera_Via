@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useModal } from '@/lib/modalContext';
 import { navigateTo, sectionHref, type SectionPath } from '@/lib/router';
+import { supportTiers, type SupportTier } from '@/data/mockData';
 import BrandLogo from '@/components/BrandLogo';
-import ModalShell from '@/components/ModalShell';
 
 interface MenuItem {
   label: string;
@@ -21,15 +21,15 @@ const formatItems: MenuItem[] = [
 ];
 
 const styleItems: MenuItem[] = [
-  { label: 'Normas de escritura', path: '/apoyo' },
-  { label: 'Código deontológico', path: '/apoyo' },
+  { label: 'Normas de escritura', path: '/' },
+  { label: 'Código deontológico', path: '/' },
 ];
 
 const subscriptionItems = ['Socio Mensual', 'Básica', 'Media', 'Premium', 'Premium + Socio'];
 
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [showProject, setShowProject] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<SupportTier | null>(null);
   const { user, email: userEmail, isCollaborator, loading: authLoading } = useAuth();
   const { open } = useModal();
 
@@ -43,13 +43,18 @@ export default function Header() {
     navigateTo(path);
   };
 
+  const showSubscription = (name: string) => {
+    setOpenMenu(null);
+    setSelectedSubscription(supportTiers.find((tier) => tier.name === name) ?? null);
+  };
+
   const openAuth = (mode: 'login' | 'signup') => {
     setOpenMenu(null);
     open({ kind: 'auth', mode });
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-graphite bg-brand-earth text-brand-paper shadow-lg">
+    <header className="sticky top-0 z-50 border-b border-brand-sand bg-brand-paper text-brand-graphite shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex justify-center pt-3">
           <a href={sectionHref('/')} className="transition-opacity hover:opacity-80" aria-label="Volver al inicio">
@@ -62,7 +67,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setOpenMenu(openMenu === 'formatos' ? null : 'formatos')}
-                className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-sand transition-colors hover:bg-brand-graphite hover:text-brand-white sm:px-3 sm:text-sm"
+                className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
                 aria-expanded={openMenu === 'formatos'}
               >
                 Formatos
@@ -75,14 +80,14 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setOpenMenu(openMenu === 'estilo' ? null : 'estilo')}
-                className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-sand transition-colors hover:bg-brand-graphite hover:text-brand-white sm:px-3 sm:text-sm"
+                className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
                 aria-expanded={openMenu === 'estilo'}
               >
                 Libro de estilo
                 <ChevronDown size={15} className={`transition-transform ${openMenu === 'estilo' ? 'rotate-180' : ''}`} />
               </button>
               {openMenu === 'estilo' && (
-                <Dropdown items={styleItems} onSelect={goTo} />
+                <Dropdown items={styleItems} onSelect={() => setOpenMenu(null)} />
               )}
             </div>
           </div>
@@ -96,12 +101,12 @@ export default function Header() {
                     Colaborador
                   </span>
                 )}
-                <span className="hidden max-w-[160px] truncate text-xs text-brand-paper/70 sm:block">
+                <span className="hidden max-w-[160px] truncate text-xs text-brand-graphite/70 sm:block">
                   {userEmail}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-paper/90 transition-colors hover:bg-brand-graphite hover:text-brand-white sm:px-3 sm:text-sm"
+                  className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
                 >
                   <LogOut size={14} />
                   Salir
@@ -111,13 +116,13 @@ export default function Header() {
               <>
                 <button
                   onClick={() => openAuth('login')}
-                  className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-paper/90 transition-colors hover:bg-brand-graphite hover:text-brand-white sm:block sm:px-3 sm:text-sm"
+                  className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:block sm:px-3 sm:text-sm"
                 >
                   Iniciar sesión
                 </button>
                 <button
                   onClick={() => openAuth('signup')}
-                  className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-paper/90 transition-colors hover:bg-brand-graphite hover:text-brand-white sm:block sm:px-3 sm:text-sm"
+                  className="hidden rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:block sm:px-3 sm:text-sm"
                 >
                   Crear cuenta
                 </button>
@@ -126,7 +131,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setOpenMenu(openMenu === 'suscripcion' ? null : 'suscripcion')}
-                className="flex items-center gap-1 rounded-md bg-brand-sand px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-paper sm:px-4 sm:text-sm"
+                className="flex items-center gap-1 rounded-md bg-brand-sand px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-white sm:px-4 sm:text-sm"
                 aria-expanded={openMenu === 'suscripcion'}
               >
                 Suscríbete
@@ -137,7 +142,7 @@ export default function Header() {
                   {subscriptionItems.map((item) => (
                     <button
                       key={item}
-                      onClick={() => goTo('/apoyo')}
+                      onClick={() => showSubscription(item)}
                       className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white"
                     >
                       {item}
@@ -149,48 +154,53 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-brand-graphite py-2 sm:justify-between">
-          <button
-            onClick={() => setShowProject(true)}
-            className="rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-sand transition-colors hover:bg-brand-graphite hover:text-brand-white"
-          >
-            Sobre el proyecto
-          </button>
+        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-brand-sand py-2 sm:justify-end">
           <div className="flex gap-2 sm:hidden">
             {user ? (
-              <button onClick={handleLogout} className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-brand-paper/90 hover:bg-brand-graphite">
+              <button onClick={handleLogout} className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-brand-graphite hover:bg-brand-sand">
                 <LogOut size={12} />
                 Salir
               </button>
             ) : (
               <>
-                <button onClick={() => openAuth('login')} className="rounded-md px-2 py-1.5 text-xs text-brand-paper/90 hover:bg-brand-graphite">Iniciar sesión</button>
-                <button onClick={() => openAuth('signup')} className="rounded-md px-2 py-1.5 text-xs text-brand-paper/90 hover:bg-brand-graphite">Crear cuenta</button>
+                <button onClick={() => openAuth('login')} className="rounded-md px-2 py-1.5 text-xs text-brand-graphite hover:bg-brand-sand">Iniciar sesión</button>
+                <button onClick={() => openAuth('signup')} className="rounded-md px-2 py-1.5 text-xs text-brand-graphite hover:bg-brand-sand">Crear cuenta</button>
               </>
             )}
           </div>
         </div>
       </div>
 
-      {showProject && (
-        <ModalShell title="Sobre el proyecto" onClose={() => setShowProject(false)}>
-          <div className="space-y-5 text-sm leading-relaxed text-black/70">
-            <section>
-              <h3 className="font-serif text-xl font-semibold text-black">Nuestro objetivo</h3>
-              <p className="mt-2">Queremos ofrecer un periodismo independiente, riguroso y útil que ayude a comprender la actualidad sin ruido ni polarización.</p>
-            </section>
-            <section>
-              <h3 className="font-serif text-xl font-semibold text-black">Qué proponemos</h3>
-              <p className="mt-2">Contrastamos marcos informativos, verificamos los hechos y acercamos las fuentes primarias para que cada persona pueda formarse su propia opinión.</p>
-            </section>
-            <section>
-              <h3 className="font-serif text-xl font-semibold text-black">Quiénes somos</h3>
-              <p className="mt-2">Somos estudiantes de Periodismo de la Facultad de Comunicación de la Universidad de Sevilla, unidos por la voluntad de construir un medio joven y responsable.</p>
-            </section>
-          </div>
-        </ModalShell>
+      {selectedSubscription && (
+        <SubscriptionDetails tier={selectedSubscription} onClose={() => setSelectedSubscription(null)} />
       )}
     </header>
+  );
+}
+
+function SubscriptionDetails({ tier, onClose }: { tier: SupportTier; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={tier.name}>
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-brand-paper p-6 text-brand-graphite shadow-2xl sm:p-8">
+        <button onClick={onClose} className="absolute right-4 top-4 rounded-full p-2 text-brand-graphite/60 transition-colors hover:bg-brand-sand hover:text-brand-graphite" aria-label="Cerrar">
+          ×
+        </button>
+        <p className="text-sm font-semibold uppercase tracking-widest text-brand-earth">Suscripción seleccionada</p>
+        <h2 className="mt-3 font-serif text-3xl font-semibold text-brand-graphite">{tier.name}</h2>
+        <p className="mt-3 font-serif text-3xl font-semibold text-brand-earth">{tier.monthly.toLocaleString('es-ES', { minimumFractionDigits: tier.monthly % 1 === 0 ? 0 : 2 })} €/mes</p>
+        <p className="mt-3 text-sm leading-relaxed text-brand-graphite/75">{tier.description}</p>
+        <ul className="mt-6 space-y-3 text-sm text-brand-graphite/85">
+          {tier.features.map((feature) => <li key={feature}>• {feature}</li>)}
+        </ul>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-8 w-full rounded-xl bg-brand-earth px-5 py-3 text-sm font-semibold uppercase tracking-wide text-brand-paper transition-colors hover:bg-brand-graphite"
+        >
+          Adquirir
+        </button>
+      </div>
+    </div>
   );
 }
 

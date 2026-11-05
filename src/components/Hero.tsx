@@ -154,7 +154,7 @@ export default function Hero() {
                         Suscribiendo...
                       </>
                     ) : (
-                      'Suscribirme gratis'
+                      'Registrarme gratis'
                     )}
                   </button>
                   {status === 'error' && (
