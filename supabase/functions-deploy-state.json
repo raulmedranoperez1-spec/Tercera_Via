@@ -4,6 +4,10 @@
     "agent": {
       "hasChanged": false,
       "hash": "57ae8a4ea4f08b815c53c99f5e53def9ba6be482222dce86fedb4c677de8aa68"
+    },
+    "forum-moderate": {
+      "hasChanged": false,
+      "hash": "9f441ebb6d5838f002ecca52f0975027d84fd7451aa4953f8d540b42fdd4db19"
     }
   }
 }

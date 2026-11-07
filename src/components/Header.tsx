@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { BookOpen, ChevronDown, LogOut, BadgeCheck } from 'lucide-react';
+import { BookOpen, ChevronDown, LogOut, BadgeCheck, UserCircle, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useModal } from '@/lib/modalContext';
-import { navigateTo, sectionHref, type SectionPath } from '@/lib/router';
+import { navigateTo, sectionHref, profileHref, forumHref, codigoDeontologicoHref, type SectionPath } from '@/lib/router';
 import { supportTiers, type SupportTier } from '@/data/mockData';
 import BrandLogo from '@/components/BrandLogo';
 
 interface MenuItem {
   label: string;
   path: SectionPath;
+  href?: string;
 }
 
 const formatItems: MenuItem[] = [
@@ -22,7 +23,7 @@ const formatItems: MenuItem[] = [
 
 const styleItems: MenuItem[] = [
   { label: 'Normas de escritura', path: '/' },
-  { label: 'Código deontológico', path: '/' },
+  { label: 'Código deontológico', path: '/', href: codigoDeontologicoHref() },
 ];
 
 const subscriptionItems = ['Socio Mensual', 'Básica', 'Media', 'Premium', 'Premium + Socio'];
@@ -87,9 +88,16 @@ export default function Header() {
                 <ChevronDown size={15} className={`transition-transform ${openMenu === 'estilo' ? 'rotate-180' : ''}`} />
               </button>
               {openMenu === 'estilo' && (
-                <Dropdown items={styleItems} onSelect={() => setOpenMenu(null)} />
+                <Dropdown items={styleItems} onSelect={goTo} />
               )}
             </div>
+            <a
+              href={forumHref()}
+              className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
+            >
+              <MessageCircle size={15} />
+              Foro
+            </a>
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
@@ -104,6 +112,13 @@ export default function Header() {
                 <span className="hidden max-w-[160px] truncate text-xs text-brand-graphite/70 sm:block">
                   {userEmail}
                 </span>
+                <a
+                  href={profileHref()}
+                  className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
+                >
+                  <UserCircle size={14} />
+                  <span className="hidden sm:inline">Mi perfil</span>
+                </a>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
@@ -207,12 +222,19 @@ function SubscriptionDetails({ tier, onClose }: { tier: SupportTier; onClose: ()
 function Dropdown({ items, onSelect }: { items: MenuItem[]; onSelect: (path: SectionPath) => void }) {
   return (
     <div className="absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-brand-sand/20 bg-brand-graphite p-2 shadow-2xl">
-      {items.map((item) => (
-        <button key={item.label} onClick={() => onSelect(item.path)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white">
-          <BookOpen size={15} className="text-brand-sand" />
-          {item.label}
-        </button>
-      ))}
+      {items.map((item) =>
+        item.href ? (
+          <a key={item.label} href={item.href} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white">
+            <BookOpen size={15} className="text-brand-sand" />
+            {item.label}
+          </a>
+        ) : (
+          <button key={item.label} onClick={() => onSelect(item.path)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white">
+            <BookOpen size={15} className="text-brand-sand" />
+            {item.label}
+          </button>
+        )
+      )}
     </div>
   );
 }

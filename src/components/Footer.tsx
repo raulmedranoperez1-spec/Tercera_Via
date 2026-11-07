@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ShieldCheck, Mail } from 'lucide-react';
-import { sectionHref } from '@/lib/router';
+import { sectionHref, codigoDeontologicoHref, type SectionPath } from '@/lib/router';
 import ModalShell from '@/components/ModalShell';
 import BrandLogo from '@/components/BrandLogo';
 
@@ -42,16 +42,25 @@ export default function Footer() {
                 { label: 'Impacto Práctico', path: '/impacto' },
                 { label: 'Apóyanos', path: '/apoyo' },
                 { label: 'Contacto', path: '/contacto' },
+                { label: 'Foro', path: '/foro' },
               ].map((item) => (
                 <li key={item.path}>
                   <a
-                    href={sectionHref(item.path)}
+                    href={sectionHref(item.path as SectionPath)}
                     className="text-paper-400 transition-colors hover:text-paper-100"
                   >
                     {item.label}
                   </a>
                 </li>
               ))}
+              <li>
+                <a
+                  href={codigoDeontologicoHref()}
+                  className="text-paper-400 transition-colors hover:text-paper-100"
+                >
+                  Código Deontológico
+                </a>
+              </li>
               <li>
                 <button
                   type="button"

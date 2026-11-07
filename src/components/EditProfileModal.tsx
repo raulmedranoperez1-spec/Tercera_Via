@@ -61,11 +61,10 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
     reader.onload = (e) => setAvatarPreview(e.target?.result as string);
     reader.readAsDataURL(file);
 
-    // Upload to storage
+    // Upload to storage (path must be <userId>/<filename> to satisfy RLS)
     setUploading(true);
     const ext = file.name.split('.').pop() || 'jpg';
-    const fileName = `${profile.id}.${ext}`;
-    const filePath = `${fileName}`;
+    const filePath = `${profile.id}/${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')

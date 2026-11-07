@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const SECTION_PATHS = ['/', '/escaner', '/impacto', '/apoyo', '/contacto'] as const;
+export const SECTION_PATHS = ['/', '/escaner', '/impacto', '/apoyo', '/contacto', '/foro'] as const;
 export type SectionPath = (typeof SECTION_PATHS)[number];
 
 export type Route =
@@ -8,7 +8,14 @@ export type Route =
   | { kind: 'me' }
   | { kind: 'writer'; id: string }
   | { kind: 'article'; id: string }
-  | { kind: 'project'; id: string };
+  | { kind: 'project'; id: string }
+  | { kind: 'codigo-deontologico' }
+  | { kind: 'forum' }
+  | { kind: 'forum-category'; slug: string }
+  | { kind: 'forum-thread'; id: string }
+  | { kind: 'forum-rules' }
+  | { kind: 'forum-moderation' }
+  | { kind: 'forum-admin' };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -17,13 +24,29 @@ export function toSectionPath(route: string): SectionPath {
 }
 
 export function resolveRoute(path: string): Route {
-  const [first, second] = path.split('/').filter(Boolean);
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length === 0) return { kind: 'section', path: '/' };
+  const [first, second, third] = parts;
+
   if (first === 'mi-perfil') return { kind: 'me' };
+
+  if (first === 'codigo-deontologico') return { kind: 'codigo-deontologico' };
+
   if (second && UUID_PATTERN.test(second)) {
     if (first === 'escritor') return { kind: 'writer', id: second };
     if (first === 'publicacion') return { kind: 'article', id: second };
     if (first === 'proyecto') return { kind: 'project', id: second };
+    if (first === 'foro' && third === 'tema') return { kind: 'forum-thread', id: second };
   }
+
+  if (first === 'foro') {
+    if (!second) return { kind: 'forum' };
+    if (second === 'normas') return { kind: 'forum-rules' };
+    if (second === 'moderacion') return { kind: 'forum-moderation' };
+    if (second === 'admin') return { kind: 'forum-admin' };
+    if (parts[1] === 'categoria' && parts[2]) return { kind: 'forum-category', slug: parts[2] };
+  }
+
   return { kind: 'section', path: toSectionPath(path) };
 }
 
@@ -45,6 +68,34 @@ export function articleHref(id: string): string {
 
 export function projectHref(id: string): string {
   return `#/proyecto/${id}`;
+}
+
+export function codigoDeontologicoHref(): string {
+  return '#/codigo-deontologico';
+}
+
+export function forumHref(): string {
+  return '#/foro';
+}
+
+export function forumCategoryHref(slug: string): string {
+  return `#/foro/categoria/${slug}`;
+}
+
+export function forumThreadHref(id: string): string {
+  return `#/foro/${id}/tema`;
+}
+
+export function forumRulesHref(): string {
+  return '#/foro/normas';
+}
+
+export function forumModerationHref(): string {
+  return '#/foro/moderacion';
+}
+
+export function forumAdminHref(): string {
+  return '#/foro/admin';
 }
 
 export function navigateTo(path: string): void {

@@ -5,7 +5,8 @@ export type ModalRequest =
   | { kind: 'auth'; mode: 'login' | 'signup' }
   | { kind: 'account' }
   | { kind: 'edit-profile' }
-  | { kind: 'share'; formatSlug?: FormatSlug; onSubmitted?: () => void };
+  | { kind: 'share'; formatSlug?: FormatSlug; onSubmitted?: () => void }
+  | { kind: 'forum-new-thread'; categoryId: string; categoryName: string };
 
 export interface ModalControls {
   open: (request: ModalRequest) => void;

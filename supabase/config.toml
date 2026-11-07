@@ -1,2 +1,5 @@
 [functions.agent]
 verify_jwt = true
+
+[functions.forum-moderate]
+verify_jwt = true

@@ -72,3 +72,14 @@ mark.adj-left {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* Print styles for Código Deontológico */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  h1, h2, h3 {
+    color: #000 !important;
+  }
+}

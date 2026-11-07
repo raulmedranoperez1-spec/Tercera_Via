@@ -1,10 +1,11 @@
-import { Briefcase, Heart, Home, ScanLine } from 'lucide-react';
+import { Briefcase, Heart, Home, MessageCircle, ScanLine } from 'lucide-react';
 import { sectionHref, type SectionPath } from '@/lib/router';
 
 const items: { icon: typeof Home; label: string; path: SectionPath }[] = [
   { icon: Home, label: 'Inicio', path: '/' },
   { icon: ScanLine, label: 'Escáner', path: '/escaner' },
   { icon: Briefcase, label: 'Impacto', path: '/impacto' },
+  { icon: MessageCircle, label: 'Foro', path: '/foro' },
   { icon: Heart, label: 'Apoyo', path: '/apoyo' },
 ];
 

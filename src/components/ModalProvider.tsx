@@ -3,6 +3,7 @@ import AuthModal from '@/components/AuthModal';
 import AccountModal from '@/components/AccountModal';
 import SubmitWorkModal from '@/components/SubmitWorkModal';
 import EditProfileModal from '@/components/EditProfileModal';
+import NewThreadModal from '@/components/NewThreadModal';
 import { ModalContext, type ModalRequest } from '@/lib/modalContext';
 
 export default function ModalProvider({ children }: { children: ReactNode }) {
@@ -24,6 +25,13 @@ export default function ModalProvider({ children }: { children: ReactNode }) {
         <SubmitWorkModal
           formatSlug={request.formatSlug}
           onSubmitted={request.onSubmitted}
+          onClose={close}
+        />
+      )}
+      {request?.kind === 'forum-new-thread' && (
+        <NewThreadModal
+          categoryId={request.categoryId}
+          categoryName={request.categoryName}
           onClose={close}
         />
       )}

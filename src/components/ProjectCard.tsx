@@ -1,10 +1,10 @@
 import { Calendar, ExternalLink } from 'lucide-react';
-import type { Project } from '@/lib/contentTypes';
+import type { ProjectSummary } from '@/lib/writers';
 import { formatDate } from '@/lib/contentTypes';
 import { projectHref } from '@/lib/router';
 
 interface ProjectCardProps {
-  project: Project;
+  project: ProjectSummary;
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
@@ -31,7 +31,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           {project.title}
         </h3>
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-500">
-          {project.description}
+          {project.description ?? ''}
         </p>
         <div className="mt-auto flex items-center pt-3 text-xs text-ink-400">
           <Calendar size={13} className="mr-1.5" />

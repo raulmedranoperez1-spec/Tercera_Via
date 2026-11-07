@@ -1,10 +1,10 @@
 import { Heart, Bookmark, Calendar } from 'lucide-react';
-import type { Article } from '@/lib/contentTypes';
+import type { ArticleSummary } from '@/lib/writers';
 import { formatDate } from '@/lib/contentTypes';
 import { articleHref } from '@/lib/router';
 
 interface ArticleCardProps {
-  article: Article;
+  article: ArticleSummary;
 }
 
 export default function ArticleCard({ article }: ArticleCardProps) {
@@ -31,7 +31,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           {article.title}
         </h3>
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-500">
-          {article.excerpt}
+          {article.excerpt ?? ''}
         </p>
         <div className="mt-auto flex items-center justify-between pt-3 text-xs text-ink-400">
           <span className="flex items-center gap-1.5">
