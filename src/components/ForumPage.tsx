@@ -4,6 +4,7 @@ import { fetchCategories, type ForumCategory } from '@/lib/forum';
 import { useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
 import { forumCategoryHref, forumRulesHref, forumModerationHref, forumAdminHref, navigateTo, sectionHref } from '@/lib/router';
+import ProposalsSection from '@/components/forum/ProposalsSection';
 
 export default function ForumPage() {
   const { profile, session } = useAuth();
@@ -93,6 +94,8 @@ export default function ForumPage() {
           )}
         </div>
       </div>
+
+      <ProposalsSection />
 
       {/* New thread CTA */}
       <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-paper-400/50 bg-paper-50 p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
