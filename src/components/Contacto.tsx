@@ -9,10 +9,10 @@ interface TeamMember {
 }
 
 const TEAM: TeamMember[] = [
-  { name: 'Xènia Ibáñez Sevilla' },
-  { name: 'María Mounaam Romera' },
-  { name: 'Alejandro Valle Cano' },
-  { name: 'Raúl Medrano Pérez' },
+  { name: 'Xènia Ibáñez Sevilla', photo: '/images/about-us/2d6399e3-96cc-470c-92f1-56ec62538910.jpeg' },
+  { name: 'María Mounaam Romera', photo: '/images/about-us/62418eda-4737-498a-ac41-5f156e5e8066.jpeg' },
+  { name: 'Alejandro Valle Cano', photo: '/images/about-us/dfec4163-eda8-4bbb-96ee-425e0a9dd176.jpeg' },
+  { name: 'Raúl Medrano Pérez', photo: '/images/about-us/IMG_4473.jpeg' },
   { name: 'Jose Agustín Pérez Garrido' },
   { name: 'Borja Martínez Arcas' },
 ];
