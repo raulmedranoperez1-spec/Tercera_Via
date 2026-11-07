@@ -16,7 +16,8 @@ export type Route =
   | { kind: 'forum-rules' }
   | { kind: 'forum-moderation' }
   | { kind: 'forum-admin' }
-  | { kind: 'reset-password' };
+  | { kind: 'reset-password' }
+  | { kind: 'admin' };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,6 +33,8 @@ export function resolveRoute(path: string): Route {
   if (first === 'mi-perfil') return { kind: 'me' };
 
   if (first === 'recuperar') return { kind: 'reset-password' };
+
+  if (first === 'admin') return { kind: 'admin' };
 
   if (first === 'codigo-deontologico') return { kind: 'codigo-deontologico' };
 

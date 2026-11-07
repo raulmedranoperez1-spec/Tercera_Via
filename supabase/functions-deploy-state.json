@@ -11,7 +11,15 @@
     },
     "send-email": {
       "hasChanged": false,
-      "hash": "1ee9e94405e4646fae0cfba3371fe5396ba53b73f41a7bd66123a920d715fc8a"
+      "hash": "3c2ad777a8b68aea1bdf311c447b72d9ec42f82c10a5cd241a9b481d41ea9ea2"
+    },
+    "admin": {
+      "hasChanged": false,
+      "hash": "9fb4b37b9e3295ae1bef567735b73e9fbd31246986e740ce238c069a3e6f3b66"
+    },
+    "style-audit": {
+      "hasChanged": false,
+      "hash": "ec74b54275dafbe3f42641789b01d4c207a2c2dea520c2f8d01796d071181a74"
     }
   }
 }
