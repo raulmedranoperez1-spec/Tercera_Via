@@ -129,7 +129,7 @@ const TITLES: TitleSection[] = [
         number: 'Artículo 8',
         title: 'Del examen cruzado de sesgos.',
         paragraphs: [
-          'Ningún artículo podrá difundirse bajo el sello de la Asociación sin la revisión y firma de un Editor de Descompresión, cuya única función será la detección y supresión de marcos polarizantes, adjetivos de carga subjetiva y vacíos documentales.',
+          'Ningún artículo podrá difundirse bajo el sello de la Asociación sin un examen previo de sesgos realizado por el sistema de inteligencia artificial de la Asociación, que verificará el cumplimiento de los criterios de la presente Carta Magna y Código: detección de marcos polarizantes, adjetivos de carga subjetiva y vacíos documentales. El examen automatizado señalará los incumplimientos y propondrá correcciones; la decisión final sobre su publicación corresponderá al equipo editorial.',
         ],
       },
       {
