@@ -13,8 +13,8 @@ const TEAM: TeamMember[] = [
   { name: 'María Mounaam Romera', photo: '/images/about-us/62418eda-4737-498a-ac41-5f156e5e8066.jpeg' },
   { name: 'Alejandro Valle Cano', photo: '/images/about-us/2d6399e3-96cc-470c-92f1-56ec62538910.jpeg' },
   { name: 'Raúl Medrano Pérez', photo: '/images/about-us/dfec4163-eda8-4bbb-96ee-425e0a9dd176.jpeg' },
-  { name: 'Jose Agustín Pérez Garrido' },
-  { name: 'Borja Martínez Arcas' },
+  { name: 'Jose Agustín Pérez Garrido', photo: '/images/about-us/3fc18064-416b-4293-895b-3880a1c39f94.jpeg' },
+  { name: 'Borja Martínez Arcas', photo: '/images/about-us/edb1d80a-02e5-4f09-8cad-8cc43406c0d2.jpeg' },
 ];
 
 function TeamPhoto({ name, photo }: TeamMember) {
