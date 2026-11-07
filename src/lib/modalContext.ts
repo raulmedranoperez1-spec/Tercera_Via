@@ -2,9 +2,10 @@ import { createContext, useContext } from 'react';
 import type { FormatSlug } from '@/lib/formats';
 
 export type ModalRequest =
-  | { kind: 'auth'; mode: 'login' | 'signup' }
+  | { kind: 'auth'; mode: 'login' | 'signup' | 'forgot' }
   | { kind: 'account' }
   | { kind: 'edit-profile' }
+  | { kind: 'reset-password' }
   | { kind: 'share'; formatSlug?: FormatSlug; onSubmitted?: () => void }
   | { kind: 'forum-new-thread'; categoryId: string; categoryName: string };
 
