@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "welcome" | "password_changed";
+  type: "welcome" | "password_changed" | "verification_reminder";
   recipient_email?: string;
 }
 
@@ -29,6 +29,20 @@ function welcomeHtml(name: string): string {
   <p style="font-size:16px;line-height:1.6;">${greeting},</p>
   <p style="font-size:16px;line-height:1.6;">Tu cuenta se ha creado correctamente. Ya formas parte de La Tercera Vía, el periodismo universitario independiente.</p>
   <p style="font-size:16px;line-height:1.6;">Desde ahora puedes seguir y guardar publicaciones, dar like, participar en el foro y apoyar el proyecto.</p>
+  <p style="margin:28px 0;">
+    <a href="${APP_URL}" style="display:inline-block;background:#704c12;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:15px;">Ir a la página</a>
+  </p>
+  <p style="font-size:13px;color:#888;">Si no creaste esta cuenta, puedes ignorar este correo.</p>
+</body></html>`;
+}
+
+function verificationReminderHtml(name: string): string {
+  const greeting = name ? `Hola, ${name}` : "Hola";
+  return `<!DOCTYPE html><html><body style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#2a2a2a;background:#f7f1e7;">
+  <h1 style="color:#704c12;font-size:22px;">Verifica tu correo</h1>
+  <p style="font-size:16px;line-height:1.6;">${greeting},</p>
+  <p style="font-size:16px;line-height:1.6;">Has creado una cuenta en La Tercera Vía. Para activarla y empezar a usarla, verifica tu correo electrónico con el enlace de confirmación que te enviamos.</p>
+  <p style="font-size:16px;line-height:1.6;">Si no recibiste el enlace de verificación, entra en tu cuenta y solicítalo de nuevo.</p>
   <p style="margin:28px 0;">
     <a href="${APP_URL}" style="display:inline-block;background:#704c12;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:15px;">Ir a la página</a>
   </p>
@@ -78,13 +92,15 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "No autorizado." }, 401);
     }
     const user = userData.user;
-    const recipient = (await req.json().catch(() => null) as EmailRequest | null)?.recipient_email?.trim().toLowerCase() || user.email;
+    const body = (await req.json().catch(() => ({} as EmailRequest))) as EmailRequest;
+    const type = body.type;
+    const recipient = body.recipient_email?.trim().toLowerCase() || user.email;
     if (!recipient) {
       return jsonResponse({ error: "Falta el destinatario." }, 400);
     }
-
-    const body = await req.json().catch(() => ({} as EmailRequest));
-    const type = (body as EmailRequest).type;
+    if (type !== "welcome" && type !== "password_changed" && type !== "verification_reminder") {
+      return jsonResponse({ error: "Tipo de correo no válido." }, 400);
+    }
 
     // Insert pending record
     const { data: notifRow, error: insertErr } = await supabase
@@ -104,8 +120,14 @@ Deno.serve(async (req: Request) => {
     }
 
     const name = user.user_metadata?.display_name as string | undefined;
-    const subject = type === "welcome" ? "Bienvenido a La Tercera Vía" : "Tu contraseña ha cambiado";
-    const html = type === "welcome" ? welcomeHtml(name) : passwordChangedHtml(name);
+    const subject =
+      type === "welcome" ? "Bienvenido a La Tercera Vía"
+      : type === "verification_reminder" ? "Verifica tu correo en La Tercera Vía"
+      : "Tu contraseña ha cambiado";
+    const html =
+      type === "welcome" ? welcomeHtml(name)
+      : type === "verification_reminder" ? verificationReminderHtml(name)
+      : passwordChangedHtml(name);
 
     const providerRes = await fetch(RESEND_API, {
       method: "POST",

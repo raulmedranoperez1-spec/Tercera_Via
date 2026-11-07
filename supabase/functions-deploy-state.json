@@ -8,6 +8,10 @@
     "forum-moderate": {
       "hasChanged": false,
       "hash": "5c19f0ee782607d1556f887abe782fd34bbca46da2bb1b719f28c52cfbb630f2"
+    },
+    "send-email": {
+      "hasChanged": false,
+      "hash": "1ee9e94405e4646fae0cfba3371fe5396ba53b73f41a7bd66123a920d715fc8a"
     }
   }
 }

@@ -1,7 +1,27 @@
 import { useState, type FormEvent } from 'react';
-import { LogIn, Mail, UserPlus, KeyRound, ArrowLeft } from 'lucide-react';
+import { LogIn, Mail, UserPlus, KeyRound, ArrowLeft, Loader2 } from 'lucide-react';
 import ModalShell from '@/components/ModalShell';
 import { supabase } from '@/lib/supabase';
+
+async function sendEmailNotification(type: 'welcome' | 'password_changed' | 'verification_reminder'): Promise<boolean> {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) return false;
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 type Mode = 'login' | 'signup' | 'forgot';
 
@@ -39,6 +59,7 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   const institutional = isInstitutional(email);
   const requirePassword = mode === 'forgot' ? false : !institutional;
@@ -142,12 +163,16 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
         setInfo('Cuenta creada. Te hemos enviado un correo de confirmación. Ábrelo para verificar tu cuenta y empezar a usarla.');
         return;
       }
+      // Session created immediately (email confirmation off) — send welcome email
+      if (data.session) {
+        await sendEmailNotification('welcome');
+      }
       onClose();
       return;
     }
 
     // login
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: trimmedEmail,
       password,
     });
@@ -156,7 +181,38 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
       setError(describeError(signInError.message));
       return;
     }
+    // Send welcome email on first login if email was just confirmed
+    if (signInData.user) {
+      const confirmedRecently = signInData.user.email_confirmed_at
+        && Date.now() - new Date(signInData.user.email_confirmed_at).getTime() < 5 * 60 * 1000;
+      if (confirmedRecently) {
+        void sendEmailNotification('welcome');
+      }
+    }
     onClose();
+  };
+
+  const handleResendVerification = async () => {
+    setResendingVerification(true);
+    setError('');
+    setInfo('');
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!isValidEmail(trimmedEmail)) {
+      setError('Introduce un correo válido.');
+      setResendingVerification(false);
+      return;
+    }
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email: trimmedEmail,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setResendingVerification(false);
+    if (resendError) {
+      setError(describeError(resendError.message));
+      return;
+    }
+    setInfo('Te hemos reenviado el correo de confirmación. Revisa tu bandeja y la carpeta de spam.');
   };
 
   const title = mode === 'login' ? 'Iniciar sesión' : mode === 'signup' ? 'Crear cuenta' : 'Recuperar contraseña';
@@ -247,6 +303,18 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
 
         {error && <p className="text-sm text-red-700">{error}</p>}
         {info && <p className="text-sm text-green-700">{info}</p>}
+
+        {mode === 'login' && /confirm your email/i.test(info) && (
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={resendingVerification}
+            className="flex w-full items-center justify-center gap-1.5 text-sm text-[#704c12] underline underline-offset-4 hover:text-[#5d432c] disabled:opacity-60"
+          >
+            {resendingVerification ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+            Reenviar correo de confirmación
+          </button>
+        )}
 
         <button
           type="submit"
