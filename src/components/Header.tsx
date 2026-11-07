@@ -22,7 +22,6 @@ const formatItems: MenuItem[] = [
 ];
 
 const styleItems: MenuItem[] = [
-  { label: 'Normas de escritura', path: '/' },
   { label: 'Código deontológico', path: '/', href: codigoDeontologicoHref() },
 ];
 
