@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { CheckCircle2, Send } from 'lucide-react';
 import ModalShell from '@/components/ModalShell';
+import StyleAuditPanel from '@/components/StyleAuditPanel';
 import { FORMATS, TRACK_OPTIONS, type FormatSlug, type Track } from '@/lib/formats';
 import { isHttpUrl } from '@/lib/url';
 import { useAuth } from '@/lib/authContext';
@@ -140,6 +141,11 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
           <input type="url" required value={link} onChange={(e) => setLink(e.target.value)} className={`mt-1.5 ${fieldClass}`} placeholder="https://" />
         </label>
         {error && <p className="text-sm text-red-700">{error}</p>}
+        <StyleAuditPanel
+          text={`${title}\n\n${synopsis}\n\n${link}`.trim()}
+          buttonClassName="flex w-full items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-5 py-3 font-medium text-black transition-colors hover:border-[#a87945] disabled:opacity-60"
+          disabledHint="Escribe un titular y un resumen para poder auditar tu borrador."
+        />
         <button type="submit" disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black disabled:opacity-60">
           <Send size={17} />
           {saving ? 'Enviando...' : 'Enviar trabajo'}

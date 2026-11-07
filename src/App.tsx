@@ -17,6 +17,9 @@ import ForumThreadPage from '@/components/ForumThreadPage';
 import ForumRulesPage from '@/components/ForumRulesPage';
 import ForumModerationPage from '@/components/ForumModerationPage';
 import ForumAdminPage from '@/components/ForumAdminPage';
+import AdminPage from '@/components/AdminPage';
+import ResetPasswordModal from '@/components/ResetPasswordModal';
+import { useModal } from '@/lib/modalContext';
 import { toSectionPath, useRoute, resolveRoute, type SectionPath } from '@/lib/router';
 import { useScrollProgress } from '@/hooks/useReveal';
 import { useAuth } from '@/lib/authContext';
@@ -68,6 +71,8 @@ function App() {
     content = <ForumModerationPage />;
   } else if (route.kind === 'forum-admin') {
     content = <ForumAdminPage />;
+  } else if (route.kind === 'admin') {
+    content = <AdminPage />;
   } else {
     content = SECTION_VIEWS['/'];
   }
