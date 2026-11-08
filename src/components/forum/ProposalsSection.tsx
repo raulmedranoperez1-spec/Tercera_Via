@@ -25,15 +25,15 @@ export default function ProposalsSection() {
           </div>
           <div>
             <p className="font-serif text-lg font-semibold text-ink-800">Propón ideas a nuestros creadores</p>
-            <p className="text-sm text-ink-500">Inicia sesión para publicar propuestas y leer las de la comunidad.</p>
+            <p className="text-sm text-ink-500">Publica propuestas, comenta y da me gusta a las ideas de la comunidad.</p>
           </div>
         </div>
         <button
           onClick={() => open({ kind: 'auth', mode: 'login' })}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
+          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#5d432c] active:scale-[0.98] sm:w-auto"
         >
           <LogIn size={16} />
-          Iniciar sesión
+          Inicia sesión o regístrate para participar en el foro de Tercera Vía
         </button>
       </section>
     );
