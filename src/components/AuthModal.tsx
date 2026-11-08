@@ -60,6 +60,9 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
   const [info, setInfo] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [code, setCode] = useState('');
 
   const institutional = isInstitutional(email);
   const requirePassword = mode === 'forgot' ? false : !institutional;
@@ -111,20 +114,15 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
     }
 
     if (institutional) {
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: trimmedEmail,
-        options: { emailRedirectTo: window.location.origin },
-      });
+      const { error: otpError } = await supabase.auth.signInWithOtp({ email: trimmedEmail });
       setSubmitting(false);
       if (otpError) {
         setError(describeError(otpError.message));
         return;
       }
-      setInfo(
-        mode === 'login'
-          ? 'Te hemos enviado un enlace de acceso a tu correo institucional. Ábrelo para entrar.'
-          : 'Te hemos enviado un enlace de verificación a tu correo institucional. Ábrelo para activar tu cuenta de colaborador.'
-      );
+      setPendingEmail(trimmedEmail);
+      setCode('');
+      setOtpStep(true);
       return;
     }
 
@@ -215,7 +213,97 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
     setInfo('Te hemos reenviado el correo de confirmación. Revisa tu bandeja y la carpeta de spam.');
   };
 
+  const handleVerifyCode = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setInfo('');
+    if (!/^\d{6}$/.test(code)) {
+      setError('El código tiene 6 dígitos.');
+      return;
+    }
+    setSubmitting(true);
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: pendingEmail,
+      token: code,
+      type: 'email',
+    });
+    setSubmitting(false);
+    if (verifyError) {
+      setError('El código no es correcto o ha caducado. Revisa tu correo o pide uno nuevo.');
+      return;
+    }
+    onClose();
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+    setInfo('');
+    setSubmitting(true);
+    const { error: otpError } = await supabase.auth.signInWithOtp({ email: pendingEmail });
+    setSubmitting(false);
+    if (otpError) {
+      setError(describeError(otpError.message));
+      return;
+    }
+    setInfo('Te hemos reenviado el código. Revisa tu bandeja y la carpeta de spam.');
+  };
+
   const title = mode === 'login' ? 'Iniciar sesión' : mode === 'signup' ? 'Crear cuenta' : 'Recuperar contraseña';
+
+  if (otpStep) {
+    return (
+      <ModalShell title="Introduce tu código" onClose={onClose}>
+        <p className="mb-5 text-sm leading-relaxed text-black/70">
+          Hemos enviado un código de 6 dígitos a <span className="font-medium text-black">{pendingEmail}</span>.
+          Introdúcelo aquí para entrar en tu cuenta.
+        </p>
+        <form onSubmit={handleVerifyCode} className="space-y-4">
+          <label className="block text-sm font-medium text-black/70">
+            Código de verificación
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              required
+              value={code}
+              onChange={(e) => { setCode(e.target.value.replace(/\D/g, '')); setError(''); setInfo(''); }}
+              className={`${inputClass} text-center font-serif text-2xl tracking-[0.5em]`}
+              placeholder="000000"
+            />
+          </label>
+
+          {error && <p className="text-sm text-red-700">{error}</p>}
+          {info && <p className="text-sm text-green-700">{info}</p>}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black disabled:opacity-60"
+          >
+            <KeyRound size={17} />
+            {submitting ? 'Verificando...' : 'Verificar y entrar'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResendCode}
+            disabled={submitting}
+            className="w-full text-sm text-black/60 underline underline-offset-4 hover:text-black disabled:opacity-60"
+          >
+            Reenviar código
+          </button>
+          <button
+            type="button"
+            onClick={() => { setOtpStep(false); setCode(''); setError(''); setInfo(''); }}
+            className="flex w-full items-center justify-center gap-1.5 text-sm text-black/60 underline underline-offset-4 hover:text-black"
+          >
+            <ArrowLeft size={14} /> Cambiar correo
+          </button>
+        </form>
+      </ModalShell>
+    );
+  }
 
   return (
     <ModalShell title={title} onClose={onClose}>
@@ -226,7 +314,7 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
         </p>
       ) : (
         <p className="mb-5 text-sm leading-relaxed text-black/70">
-          Con un correo institucional (@alum.us.es) recibirás un enlace de verificación en tu correo
+          Con un correo institucional (@alum.us.es) recibirás un código de 6 dígitos en tu correo
           y se te asignará el rol de colaborador para publicar trabajos. Con cualquier otro correo
           serás lector o suscriptor.
         </p>
@@ -266,7 +354,7 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
             <Mail size={16} className="mt-0.5 shrink-0" />
             <span>
               Por seguridad, con el correo institucional no usas contraseña: te enviaremos un
-              enlace de acceso único a esa dirección.
+              código de 6 dígitos a esa dirección.
             </span>
           </div>
         )}
@@ -324,7 +412,7 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
           {mode === 'forgot' ? (
             <><KeyRound size={17} />{submitting ? 'Enviando...' : 'Enviar enlace de recuperación'}</>
           ) : institutional ? (
-            <><Mail size={17} />{submitting ? 'Procesando...' : 'Enviar enlace al mi correo'}</>
+            <><Mail size={17} />{submitting ? 'Procesando...' : 'Enviarme un código'}</>
           ) : mode === 'login' ? (
             <><LogIn size={17} />{submitting ? 'Procesando...' : 'Entrar'}</>
           ) : (

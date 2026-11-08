@@ -2,19 +2,19 @@ import { useEffect, useState } from 'react';
 import { MessageSquare, Users, ArrowRight, Loader2, Inbox, ShieldCheck, BookOpen } from 'lucide-react';
 import { fetchCategories, type ForumCategory } from '@/lib/forum';
 import { useAuth } from '@/lib/authContext';
-import { useModal } from '@/lib/modalContext';
-import { forumCategoryHref, forumRulesHref, forumModerationHref, forumAdminHref, navigateTo, sectionHref } from '@/lib/router';
+import { forumCategoryHref, forumRulesHref, forumModerationHref, forumAdminHref, navigateTo } from '@/lib/router';
 import ProposalsSection from '@/components/forum/ProposalsSection';
+import ForumGate from '@/components/forum/ForumGate';
 
 export default function ForumPage() {
-  const { profile, session } = useAuth();
-  const { open } = useModal();
+  const { profile, session, loading: authLoading } = useAuth();
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const isEditor = profile?.role === 'equipo_editorial';
 
   useEffect(() => {
+    if (!session) return;
     let active = true;
     setLoading(true);
     fetchCategories()
@@ -32,7 +32,19 @@ export default function ForumPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [session]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-[#704c12]" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <ForumGate />;
+  }
 
   if (loading) {
     return (
@@ -105,27 +117,16 @@ export default function ForumPage() {
           </div>
           <div>
             <p className="font-serif text-lg font-semibold text-ink-800">¿Tienes algo que decir?</p>
-            <p className="text-sm text-ink-500">
-              {session ? 'Crea un nuevo tema de debate en la categoría que elijas.' : 'Inicia sesión para participar en los debates.'}
-            </p>
+            <p className="text-sm text-ink-500">Crea un nuevo tema de debate en la categoría que elijas.</p>
           </div>
         </div>
-        {session ? (
-          <button
-            onClick={() => navigateTo('#/foro')}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
-          >
-            Elige una categoría
-            <ArrowRight size={16} />
-          </button>
-        ) : (
-          <button
-            onClick={() => open({ kind: 'auth', mode: 'signup' })}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
-          >
-            Registrarme gratis
-          </button>
-        )}
+        <button
+          onClick={() => navigateTo('#/foro')}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
+        >
+          Elige una categoría
+          <ArrowRight size={16} />
+        </button>
       </div>
 
       {/* Categories grid */}

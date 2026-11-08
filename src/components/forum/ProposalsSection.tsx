@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Lightbulb, Loader2, LogIn, MessageSquare, Inbox } from 'lucide-react';
+import { Loader2, MessageSquare, Inbox } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
-import { useModal } from '@/lib/modalContext';
 import {
   createProposal,
   deleteProposal,
@@ -14,31 +13,7 @@ import ProposalCard from '@/components/forum/ProposalCard';
 
 export default function ProposalsSection() {
   const { session, profile } = useAuth();
-  const { open } = useModal();
-
-  if (!session) {
-    return (
-      <section className="mt-8 flex flex-col gap-4 rounded-2xl border border-paper-400/50 bg-paper-50 p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#704c12]/10">
-            <Lightbulb size={24} className="text-[#704c12]" />
-          </div>
-          <div>
-            <p className="font-serif text-lg font-semibold text-ink-800">Propón ideas a nuestros creadores</p>
-            <p className="text-sm text-ink-500">Publica propuestas, comenta y da me gusta a las ideas de la comunidad.</p>
-          </div>
-        </div>
-        <button
-          onClick={() => open({ kind: 'auth', mode: 'login' })}
-          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#5d432c] active:scale-[0.98] sm:w-auto"
-        >
-          <LogIn size={16} />
-          Inicia sesión o regístrate para participar en el foro de Tercera Vía
-        </button>
-      </section>
-    );
-  }
-
+  if (!session) return null;
   return <ProposalsWall userId={session.user.id} canModerate={profile?.role === 'equipo_editorial'} />;
 }
 
