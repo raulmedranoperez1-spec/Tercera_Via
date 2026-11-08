@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import type { FormatSlug } from '@/lib/formats';
 
 export type ModalRequest =
-  | { kind: 'auth'; mode: 'login' | 'signup' | 'forgot' }
+  | { kind: 'auth'; mode: 'login' | 'signup' }
   | { kind: 'account' }
   | { kind: 'edit-profile' }
   | { kind: 'reset-password' }
