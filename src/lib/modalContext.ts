@@ -6,6 +6,7 @@ export type ModalRequest =
   | { kind: 'account' }
   | { kind: 'edit-profile' }
   | { kind: 'reset-password' }
+  | { kind: 'subscribe' }
   | { kind: 'share'; formatSlug?: FormatSlug; onSubmitted?: () => void }
   | { kind: 'forum-new-thread'; categoryId: string; categoryName: string };
 

@@ -4,6 +4,7 @@ import AccountModal from '@/components/AccountModal';
 import SubmitWorkModal from '@/components/SubmitWorkModal';
 import EditProfileModal from '@/components/EditProfileModal';
 import NewThreadModal from '@/components/NewThreadModal';
+import SubscribeModal from '@/components/SubscribeModal';
 import { ModalContext, type ModalRequest } from '@/lib/modalContext';
 
 export default function ModalProvider({ children }: { children: ReactNode }) {
@@ -20,6 +21,7 @@ export default function ModalProvider({ children }: { children: ReactNode }) {
         <AuthModal key={request.mode} initialMode={request.mode} onClose={close} />
       )}
       {request?.kind === 'account' && <AccountModal onClose={close} />}
+      {request?.kind === 'subscribe' && <SubscribeModal onClose={close} />}
       {request?.kind === 'edit-profile' && <EditProfileModal onClose={close} />}
       {request?.kind === 'share' && (
         <SubmitWorkModal

@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.style-audit]
 verify_jwt = false
+
+[functions.news-review]
+verify_jwt = true
