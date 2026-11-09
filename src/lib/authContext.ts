@@ -1,7 +1,12 @@
 import { createContext, useContext } from 'react';
 import type { Session } from '@supabase/supabase-js';
 
-export type AppRole = 'lector' | 'colaborador' | 'equipo_editorial';
+export type AppRole = 'lector' | 'redactor' | 'colaborador' | 'equipo_editorial';
+
+export interface SocialLink {
+  platform: string;
+  url: string;
+}
 
 export interface Profile {
   id: string;
@@ -12,6 +17,8 @@ export interface Profile {
   username: string | null;
   bio: string | null;
   avatar_url: string | null;
+  academic_year: string | null;
+  social_links: SocialLink[];
 }
 
 export interface AuthState {
@@ -32,6 +39,8 @@ export function useAuth(): AuthState {
 
 export function roleLabel(role: AppRole): string {
   switch (role) {
+    case 'redactor':
+      return 'Redactor / Alumno FCOM';
     case 'colaborador':
       return 'Colaborador';
     case 'equipo_editorial':

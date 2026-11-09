@@ -43,7 +43,7 @@ export default function WriterProfilePage({ writerId }: WriterProfilePageProps) 
 
   const isOwnProfile = session?.user?.id === writerId;
   const canEdit =
-    isOwnProfile && (ownProfile?.role === 'colaborador' || ownProfile?.role === 'equipo_editorial');
+    isOwnProfile && (ownProfile?.role === 'redactor' || ownProfile?.role === 'colaborador' || ownProfile?.role === 'equipo_editorial');
 
   useEffect(() => {
     let active = true;
@@ -128,6 +128,11 @@ export default function WriterProfilePage({ writerId }: WriterProfilePageProps) 
         <div className="flex flex-1 flex-col items-center text-center sm:items-start sm:text-left">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-serif text-3xl font-semibold text-ink-800 sm:text-4xl">{name}</h1>
+            {writer.role === 'redactor' && (
+              <span className="rounded-full bg-[#704c12]/10 px-3 py-1 text-xs font-semibold text-[#5d432c]">
+                Redactor
+              </span>
+            )}
             {writer.role === 'colaborador' && (
               <span className="rounded-full bg-[#704c12]/10 px-3 py-1 text-xs font-semibold text-[#5d432c]">
                 Escritor

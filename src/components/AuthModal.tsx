@@ -79,7 +79,7 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
         <div className="mb-5 flex items-start gap-2 rounded-lg border border-[#704c12]/30 bg-[#704c12]/5 px-3 py-2.5 text-xs leading-relaxed text-[#5d432c]">
           <Mail size={16} className="mt-0.5 shrink-0" />
           <span>
-            Con un correo @us.es o @alum.us.es tendrás el rol de colaborador para publicar trabajos.
+            Con un correo @us.es o @alum.us.es obtendrás el rol de redactor para publicar trabajos.
             Con cualquier otro correo serás lector.
           </span>
         </div>

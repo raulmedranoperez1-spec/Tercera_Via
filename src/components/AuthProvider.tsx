@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { AuthContext, type Profile } from '@/lib/authContext';
 
-const PROFILE_COLUMNS = 'id, email, role, display_name, is_socio, username, bio, avatar_url';
+const PROFILE_COLUMNS = 'id, email, role, display_name, is_socio, username, bio, avatar_url, academic_year, social_links';
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

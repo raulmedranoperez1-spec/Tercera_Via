@@ -47,7 +47,7 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
     );
   }
 
-  if (profile.role !== 'colaborador') {
+  if (profile.role !== 'redactor' && profile.role !== 'colaborador') {
     return (
       <ModalShell title="Comparte tu trabajo" onClose={onClose}>
         <p className="text-sm leading-relaxed text-black/70">

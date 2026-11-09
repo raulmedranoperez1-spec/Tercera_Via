@@ -65,7 +65,7 @@ export function useAuth(): AuthState {
     user,
     email,
     role,
-    isCollaborator: role === 'colaborador' || role === 'equipo_editorial',
+    isCollaborator: role === 'redactor' || role === 'colaborador' || role === 'equipo_editorial',
     loading,
   };
 }

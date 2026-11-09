@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Camera, CheckCircle2, Loader2 } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
 import ModalShell from '@/components/ModalShell';
 import { useAuth } from '@/lib/authContext';
 import { supabase } from '@/lib/supabase';
 import { displayName, initials } from '@/lib/contentTypes';
+import type { SocialLink } from '@/lib/authContext';
 
 interface EditProfileModalProps {
   onClose: () => void;
@@ -12,17 +13,23 @@ interface EditProfileModalProps {
 const fieldClass =
   'w-full rounded-lg border border-black/15 bg-white px-4 py-3 text-black outline-none focus:border-[#a87945]';
 
+const SOCIAL_PLATFORMS = ['X / Twitter', 'LinkedIn', 'Instagram', 'Facebook', 'Web personal', 'Otro'];
+
 export default function EditProfileModal({ onClose }: EditProfileModalProps) {
   const { profile, session, refreshProfile } = useAuth();
   const [displayNameVal, setDisplayNameVal] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [academicYear, setAcademicYear] = useState('');
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isRedactor = profile?.role === 'redactor' || profile?.role === 'colaborador' || profile?.role === 'equipo_editorial';
 
   useEffect(() => {
     if (profile) {
@@ -30,6 +37,8 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
       setBio(profile.bio ?? '');
       setAvatarUrl(profile.avatar_url);
       setAvatarPreview(profile.avatar_url);
+      setAcademicYear(profile.academic_year ?? '');
+      setSocialLinks(profile.social_links ?? []);
     }
   }, [profile]);
 
@@ -56,12 +65,10 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
 
     setError('');
 
-    // Show preview immediately
     const reader = new FileReader();
     reader.onload = (e) => setAvatarPreview(e.target?.result as string);
     reader.readAsDataURL(file);
 
-    // Upload to storage (path must be <userId>/<filename> to satisfy RLS)
     setUploading(true);
     const ext = file.name.split('.').pop() || 'jpg';
     const filePath = `${profile.id}/${Date.now()}.${ext}`;
@@ -82,10 +89,23 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
     setAvatarUrl(urlData.publicUrl);
   };
 
+  const addSocialLink = () => {
+    setSocialLinks([...socialLinks, { platform: SOCIAL_PLATFORMS[0], url: '' }]);
+  };
+
+  const updateSocialLink = (index: number, field: 'platform' | 'url', value: string) => {
+    setSocialLinks(socialLinks.map((link, i) => (i === index ? { ...link, [field]: value } : link)));
+  };
+
+  const removeSocialLink = (index: number) => {
+    setSocialLinks(socialLinks.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedName = displayNameVal.trim();
     const trimmedBio = bio.trim();
+    const trimmedAcademic = academicYear.trim();
 
     if (trimmedName.length < 2) {
       setError('El nombre debe tener al menos 2 caracteres.');
@@ -100,16 +120,25 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
       return;
     }
 
+    const validSocialLinks = socialLinks.filter((l) => l.url.trim().length > 0);
+
     setSaving(true);
     setError('');
 
+    const updateData: Record<string, unknown> = {
+      display_name: trimmedName,
+      bio: trimmedBio,
+      avatar_url: avatarUrl,
+    };
+
+    if (isRedactor) {
+      updateData.academic_year = trimmedAcademic || null;
+      updateData.social_links = JSON.stringify(validSocialLinks);
+    }
+
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({
-        display_name: trimmedName,
-        bio: trimmedBio,
-        avatar_url: avatarUrl,
-      })
+      .update(updateData)
       .eq('id', profile.id);
 
     setSaving(false);
@@ -148,7 +177,6 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
   return (
     <ModalShell title="Editar perfil" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Avatar */}
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#704c12]/20 bg-[#ebdbc6]">
@@ -183,7 +211,6 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
           </div>
         </div>
 
-        {/* Name */}
         <label className="block text-sm font-medium text-black/70">
           Nombre
           <input
@@ -198,7 +225,6 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
           />
         </label>
 
-        {/* Bio */}
         <label className="block text-sm font-medium text-black/70">
           Descripción
           <textarea
@@ -211,6 +237,76 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
           />
           <span className="mt-1 block text-right text-xs text-black/40">{bio.length}/500</span>
         </label>
+
+        {isRedactor && (
+          <>
+            <div className="border-t border-black/10 pt-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#704c12]">
+                Campos de redactor
+              </p>
+
+              <label className="block text-sm font-medium text-black/70">
+                Curso académico / Grado
+                <input
+                  type="text"
+                  maxLength={100}
+                  value={academicYear}
+                  onChange={(e) => setAcademicYear(e.target.value)}
+                  className={`mt-1.5 ${fieldClass}`}
+                  placeholder="Ej: 3º Periodismo, Universidad de Sevilla"
+                />
+              </label>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-medium text-black/70">Enlaces sociales</p>
+                <button
+                  type="button"
+                  onClick={addSocialLink}
+                  className="flex items-center gap-1 text-xs font-medium text-[#704c12] hover:text-[#5d432c]"
+                >
+                  <Plus size={14} />
+                  Añadir
+                </button>
+              </div>
+              {socialLinks.length === 0 ? (
+                <p className="text-xs text-black/40">No tienes enlaces sociales añadidos.</p>
+              ) : (
+                <div className="space-y-2">
+                  {socialLinks.map((link, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <select
+                        value={link.platform}
+                        onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
+                        className={`shrink-0 rounded-lg border border-black/15 bg-white px-3 py-2.5 text-sm text-black outline-none focus:border-[#a87945]`}
+                      >
+                        {SOCIAL_PLATFORMS.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="url"
+                        value={link.url}
+                        onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
+                        className={`flex-1 ${fieldClass}`}
+                        placeholder="https://..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSocialLink(index)}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-black/10 text-black/40 transition-colors hover:border-red-300 hover:text-red-600"
+                        aria-label="Eliminar enlace"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {error && <p className="text-sm text-red-700">{error}</p>}
 
