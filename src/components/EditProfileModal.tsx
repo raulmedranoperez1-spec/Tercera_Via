@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Camera, CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
 import ModalShell from '@/components/ModalShell';
-import { useAuth } from '@/lib/authContext';
+import { isWriterRole, useAuth, type SocialLink } from '@/lib/authContext';
 import { supabase } from '@/lib/supabase';
 import { displayName, initials } from '@/lib/contentTypes';
-import type { SocialLink } from '@/lib/authContext';
 
 interface EditProfileModalProps {
   onClose: () => void;
@@ -29,7 +28,7 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isRedactor = profile?.role === 'redactor' || profile?.role === 'colaborador' || profile?.role === 'equipo_editorial';
+  const isWriter = profile ? isWriterRole(profile.role) : false;
 
   useEffect(() => {
     if (profile) {
@@ -127,13 +126,13 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
 
     const updateData: Record<string, unknown> = {
       display_name: trimmedName,
-      bio: trimmedBio,
       avatar_url: avatarUrl,
     };
 
-    if (isRedactor) {
+    if (isWriter) {
+      updateData.bio = trimmedBio;
       updateData.academic_year = trimmedAcademic || null;
-      updateData.social_links = JSON.stringify(validSocialLinks);
+      updateData.social_links = validSocialLinks;
     }
 
     const { error: updateError } = await supabase
@@ -225,25 +224,25 @@ export default function EditProfileModal({ onClose }: EditProfileModalProps) {
           />
         </label>
 
-        <label className="block text-sm font-medium text-black/70">
-          Descripción
-          <textarea
-            rows={4}
-            maxLength={500}
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className={`mt-1.5 resize-none ${fieldClass}`}
-            placeholder="Cuéntanos sobre ti, tus intereses, tu trayectoria..."
-          />
-          <span className="mt-1 block text-right text-xs text-black/40">{bio.length}/500</span>
-        </label>
-
-        {isRedactor && (
+        {isWriter && (
           <>
             <div className="border-t border-black/10 pt-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#704c12]">
                 Campos de redactor
               </p>
+
+              <label className="mb-4 block text-sm font-medium text-black/70">
+                Biografía
+                <textarea
+                  rows={4}
+                  maxLength={500}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className={`mt-1.5 resize-none ${fieldClass}`}
+                  placeholder="Cuéntanos sobre ti, tus intereses, tu trayectoria..."
+                />
+                <span className="mt-1 block text-right text-xs text-black/40">{bio.length}/500</span>
+              </label>
 
               <label className="block text-sm font-medium text-black/70">
                 Curso académico / Grado

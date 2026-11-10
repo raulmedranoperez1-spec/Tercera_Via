@@ -37,6 +37,14 @@ export function useAuth(): AuthState {
   return ctx;
 }
 
+export function isWriterRole(role: AppRole): boolean {
+  return role === 'redactor' || role === 'colaborador' || role === 'equipo_editorial';
+}
+
+export function canSubmitWork(role: AppRole): boolean {
+  return role === 'redactor' || role === 'colaborador';
+}
+
 export function roleLabel(role: AppRole): string {
   switch (role) {
     case 'redactor':

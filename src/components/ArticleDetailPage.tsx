@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Heart, Bookmark, Calendar, Loader2 } from 'lucide-react';
-import { fetchArticle, fetchWriterProfile, type ArticleDetail, type WriterProfile } from '@/lib/writers';
+import { fetchArticleDetail, fetchWriterProfile, type ArticleDetail, type WriterProfile } from '@/lib/writers';
 import { formatDate, displayName } from '@/lib/contentTypes';
 import { sectionHref, writerHref } from '@/lib/router';
 
@@ -19,7 +19,7 @@ export default function ArticleDetailPage({ articleId }: ArticleDetailPageProps)
     setLoading(true);
     setError('');
 
-    fetchArticle(articleId)
+    fetchArticleDetail(articleId)
       .then(async (a) => {
         if (!active) return;
         if (!a) {

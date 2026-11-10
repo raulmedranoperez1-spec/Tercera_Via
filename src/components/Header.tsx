@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { BookOpen, ChevronDown, LogOut, BadgeCheck, UserCircle, MessageCircle } from 'lucide-react';
+import { BookOpen, ChevronDown, LogOut, BadgeCheck, UserCircle, MessageCircle, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { canSubmitWork, roleLabel, useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
 import { navigateTo, sectionHref, profileHref, forumHref, codigoDeontologicoHref, type SectionPath } from '@/lib/router';
 import { supportTiers, type SupportTier } from '@/data/mockData';
@@ -30,7 +30,8 @@ const subscriptionItems = ['Socio Mensual', 'Básica', 'Media', 'Premium', 'Prem
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<SupportTier | null>(null);
-  const { user, email: userEmail, isCollaborator, loading: authLoading } = useAuth();
+  const { session, profile, loading: authLoading } = useAuth();
+  const canPublish = !!profile && canSubmitWork(profile.role);
   const { open } = useModal();
 
   const handleLogout = async () => {
@@ -100,16 +101,16 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
-            {!authLoading && user ? (
+            {!authLoading && session ? (
               <div className="flex items-center gap-2">
-                {isCollaborator && (
+                {profile && canPublish && (
                   <span className="hidden items-center gap-1 rounded-full bg-brand-sand/20 px-2.5 py-1 text-xs font-semibold text-brand-sand sm:flex">
                     <BadgeCheck size={13} />
-                    Colaborador
+                    {roleLabel(profile.role)}
                   </span>
                 )}
                 <span className="hidden max-w-[160px] truncate text-xs text-brand-graphite/70 sm:block">
-                  {userEmail}
+                  {profile?.email}
                 </span>
                 <a
                   href={profileHref()}
@@ -118,6 +119,15 @@ export default function Header() {
                   <UserCircle size={14} />
                   <span className="hidden sm:inline">Mi perfil</span>
                 </a>
+                {canPublish && (
+                  <button
+                    onClick={() => open({ kind: 'share' })}
+                    className="flex items-center gap-1.5 rounded-md bg-brand-earth px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-brand-paper transition-colors hover:bg-brand-graphite sm:px-3 sm:text-sm"
+                  >
+                    <Send size={14} />
+                    <span className="hidden sm:inline">Sube tu proyecto</span>
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
@@ -170,7 +180,7 @@ export default function Header() {
 
         <div className="flex flex-wrap items-center justify-center gap-2 border-t border-brand-sand py-2 sm:justify-end">
           <div className="flex gap-2 sm:hidden">
-            {user ? (
+            {session ? (
               <button onClick={handleLogout} className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-brand-graphite hover:bg-brand-sand">
                 <LogOut size={12} />
                 Salir

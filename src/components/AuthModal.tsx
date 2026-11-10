@@ -12,7 +12,15 @@ interface AuthModalProps {
 
 function describeError(message: string): string {
   if (/invalid login credentials/i.test(message)) return 'Correo o contraseña incorrectos.';
-  if (/already registered/i.test(message)) return 'Ya existe una cuenta con ese correo. Inicia sesión.';
+  if (/already registered|already been registered|user already exists/i.test(message)) {
+    return 'Ya existe una cuenta con ese correo. Inicia sesión.';
+  }
+  if (/email not confirmed/i.test(message)) {
+    return 'Tu cuenta aún no está activada. Contacta con la redacción para poder entrar.';
+  }
+  if (/email address .* is invalid|invalid email/i.test(message)) {
+    return 'Revisa que el correo esté bien escrito.';
+  }
   if (/rate limit/i.test(message)) return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
   if (/password.*weak|at least 6/i.test(message)) return 'La contraseña debe tener al menos 6 caracteres.';
   return 'No se pudo completar la operación. Revisa tus datos e inténtalo de nuevo.';
@@ -46,6 +54,9 @@ export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
       options: { data: { display_name: trimmedName } },
     });
     if (signUpError) return describeError(signUpError.message);
+    if (data.user && data.user.identities?.length === 0) {
+      return 'Ya existe una cuenta con ese correo. Inicia sesión.';
+    }
     if (!data.session) return 'Tu cuenta se ha creado, pero no se pudo iniciar sesión. Inténtalo desde "Iniciar sesión".';
     return null;
   };

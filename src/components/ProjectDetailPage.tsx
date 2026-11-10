@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Calendar, ExternalLink, Loader2 } from 'lucide-react';
-import { fetchProject, fetchWriterProfile, type ProjectDetail, type WriterProfile } from '@/lib/writers';
+import { fetchProjectDetail, fetchWriterProfile, type ProjectDetail, type WriterProfile } from '@/lib/writers';
 import { formatDate, displayName } from '@/lib/contentTypes';
 import { sectionHref, writerHref } from '@/lib/router';
 
@@ -19,7 +19,7 @@ export default function ProjectDetailPage({ projectId }: ProjectDetailPageProps)
     setLoading(true);
     setError('');
 
-    fetchProject(projectId)
+    fetchProjectDetail(projectId)
       .then(async (p) => {
         if (!active) return;
         if (!p) {

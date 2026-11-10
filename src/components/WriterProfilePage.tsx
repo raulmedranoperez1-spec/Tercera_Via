@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Pencil, FileText, FolderOpen, Mic, ArrowLeft, Inbox } from 'lucide-react';
+import { Loader2, Pencil, FileText, FolderOpen, Mic, ArrowLeft, Inbox, Send } from 'lucide-react';
 import {
   fetchWriterProfile,
   fetchWriterArticles,
@@ -11,7 +11,7 @@ import {
   type PodcastSummary,
 } from '@/lib/writers';
 import { displayName, initials, type ContentTab } from '@/lib/contentTypes';
-import { useAuth } from '@/lib/authContext';
+import { canSubmitWork, useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
 import { sectionHref, writerHref } from '@/lib/router';
 import ArticleCard from '@/components/ArticleCard';
@@ -42,8 +42,7 @@ export default function WriterProfilePage({ writerId }: WriterProfilePageProps) 
   const [playingPodcast, setPlayingPodcast] = useState<PodcastSummary | null>(null);
 
   const isOwnProfile = session?.user?.id === writerId;
-  const canEdit =
-    isOwnProfile && (ownProfile?.role === 'redactor' || ownProfile?.role === 'colaborador' || ownProfile?.role === 'equipo_editorial');
+  const canPublish = isOwnProfile && !!ownProfile && canSubmitWork(ownProfile.role);
 
   useEffect(() => {
     let active = true;
@@ -160,15 +159,27 @@ export default function WriterProfilePage({ writerId }: WriterProfilePageProps) 
             </span>
           </div>
 
-          {canEdit && (
-            <button
-              type="button"
-              onClick={() => open({ kind: 'edit-profile' })}
-              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
-            >
-              <Pencil size={15} />
-              Editar perfil
-            </button>
+          {isOwnProfile && (
+            <div className="mt-5 flex flex-wrap justify-center gap-3 sm:justify-start">
+              <button
+                type="button"
+                onClick={() => open({ kind: 'edit-profile' })}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
+              >
+                <Pencil size={15} />
+                Editar perfil
+              </button>
+              {canPublish && (
+                <button
+                  type="button"
+                  onClick={() => open({ kind: 'share' })}
+                  className="inline-flex items-center gap-2 rounded-lg border border-[#704c12]/40 bg-paper-50 px-5 py-2.5 text-sm font-medium text-[#5d432c] transition-colors hover:border-[#704c12] hover:bg-[#704c12]/5"
+                >
+                  <Send size={15} />
+                  Sube aquí tu proyecto
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -204,7 +215,7 @@ export default function WriterProfilePage({ writerId }: WriterProfilePageProps) 
           <ContentGrid
             items={articles}
             emptyTitle="Sin noticias todavía"
-            emptyMessage={canEdit ? 'Cuando publiques una noticia, aparecerá aquí.' : 'Este escritor aún no ha publicado noticias.'}
+            emptyMessage={canPublish ? 'Cuando publiques una noticia, aparecerá aquí.' : 'Este escritor aún no ha publicado noticias.'}
             renderItem={(a) => <ArticleCard article={a} />}
           />
         )}
@@ -212,7 +223,7 @@ export default function WriterProfilePage({ writerId }: WriterProfilePageProps) 
           <ContentGrid
             items={projects}
             emptyTitle="Sin proyectos todavía"
-            emptyMessage={canEdit ? 'Cuando subas un proyecto, aparecerá aquí.' : 'Este escritor aún no ha subido proyectos.'}
+            emptyMessage={canPublish ? 'Cuando subas un proyecto, aparecerá aquí.' : 'Este escritor aún no ha subido proyectos.'}
             renderItem={(p) => <ProjectCard project={p} />}
           />
         )}
@@ -220,7 +231,7 @@ export default function WriterProfilePage({ writerId }: WriterProfilePageProps) 
           <ContentGrid
             items={podcasts}
             emptyTitle="Sin podcasts todavía"
-            emptyMessage={canEdit ? 'Cuando publiques un podcast, aparecerá aquí.' : 'Este escritor aún no ha publicado podcasts.'}
+            emptyMessage={canPublish ? 'Cuando publiques un podcast, aparecerá aquí.' : 'Este escritor aún no ha publicado podcasts.'}
             renderItem={(p) => <PodcastCard podcast={p} onPlay={setPlayingPodcast} />}
           />
         )}

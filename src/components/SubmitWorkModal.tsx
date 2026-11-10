@@ -4,7 +4,7 @@ import ModalShell from '@/components/ModalShell';
 import StyleAuditPanel from '@/components/StyleAuditPanel';
 import { FORMATS, TRACK_OPTIONS, type FormatSlug, type Track } from '@/lib/formats';
 import { isHttpUrl } from '@/lib/url';
-import { useAuth } from '@/lib/authContext';
+import { canSubmitWork, useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
 import { supabase } from '@/lib/supabase';
 
@@ -47,11 +47,11 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
     );
   }
 
-  if (profile.role !== 'redactor' && profile.role !== 'colaborador') {
+  if (!canSubmitWork(profile.role)) {
     return (
       <ModalShell title="Comparte tu trabajo" onClose={onClose}>
         <p className="text-sm leading-relaxed text-black/70">
-          Solo las cuentas con correo institucional (terminado en @alum.us.es) pueden publicar. Con tu correo actual tienes acceso de lector.
+          Solo las cuentas con correo institucional (@us.es o @alum.us.es) pueden publicar. Con tu correo actual tienes acceso de lector.
         </p>
         <button type="button" onClick={onClose} className="mt-6 w-full rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black">
           Entendido
