@@ -28,7 +28,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-
+    return;
+    
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
       setSession(data.session);
