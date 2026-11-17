@@ -1,184 +1,154 @@
-import { useState, type FormEvent } from 'react';
-import { LogIn, Mail, UserPlus } from 'lucide-react';
-import ModalShell from '@/components/ModalShell';
-import { supabase } from '@/lib/supabase';
-
-type Mode = 'login' | 'signup';
+import React, { useState } from 'react';
+import { X, CheckCircle2, GraduationCap, BookOpen } from 'lucide-react';
 
 interface AuthModalProps {
-  initialMode: Mode;
+  isOpen: boolean;
   onClose: () => void;
+  onAuthSuccess: (user: { name: string; email: string; role: 'Alumno FCOM' | 'Lector' }) => void;
 }
 
-function describeError(message: string): string {
-  if (/invalid login credentials/i.test(message)) return 'Correo o contraseña incorrectos.';
-  if (/already registered|already been registered|user already exists/i.test(message)) {
-    return 'Ya existe una cuenta con ese correo. Inicia sesión.';
-  }
-  if (/email not confirmed/i.test(message)) {
-    return 'Tu cuenta aún no está activada. Contacta con la redacción para poder entrar.';
-  }
-  if (/email address .* is invalid|invalid email/i.test(message)) {
-    return 'Revisa que el correo esté bien escrito.';
-  }
-  if (/rate limit/i.test(message)) return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
-  if (/password.*weak|at least 6/i.test(message)) return 'La contraseña debe tener al menos 6 caracteres.';
-  return 'No se pudo completar la operación. Revisa tus datos e inténtalo de nuevo.';
-}
-
-const inputClass = 'mt-1.5 w-full rounded-lg border border-black/15 bg-white px-4 py-3 text-black outline-none focus:border-[#a87945]';
-
-export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
-  const [mode, setMode] = useState<Mode>(initialMode);
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess }) => {
+  const [isRegister, setIsRegister] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
-  const switchMode = (next: Mode) => {
-    setMode(next);
+  if (!isOpen) return null;
+
+  const isUniversityEmail = (addr: string) => {
+    const clean = addr.trim().toLowerCase();
+    return clean.endsWith('@alum.us.es') || clean.endsWith('@us.es');
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-  };
 
-  const handleSignUp = async (trimmedEmail: string) => {
-    const trimmedName = name.trim();
-    if (trimmedName.length < 2) return 'El nombre debe tener al menos 2 caracteres.';
-    if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres.';
-    if (password !== confirmPassword) return 'Las contraseñas no coinciden.';
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: trimmedEmail,
-      password,
-      options: { data: { display_name: trimmedName } },
-    });
-    if (signUpError) return describeError(signUpError.message);
-    if (data.user && data.user.identities?.length === 0) {
-      return 'Ya existe una cuenta con ese correo. Inicia sesión.';
-    }
-    if (!data.session) return 'Tu cuenta se ha creado, pero no se pudo iniciar sesión. Inténtalo desde "Iniciar sesión".';
-    return null;
-  };
-
-  const handleSignIn = async (trimmedEmail: string) => {
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
-    if (signInError) return describeError(signInError.message);
-    return null;
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError('');
-    setSubmitting(true);
-    const trimmedEmail = email.trim().toLowerCase();
-
-    const failure = mode === 'signup' ? await handleSignUp(trimmedEmail) : await handleSignIn(trimmedEmail);
-    setSubmitting(false);
-    if (failure) {
-      setError(failure);
+    if (!email.trim() || !password.trim() || (isRegister && !name.trim())) {
+      setError('Por favor, completa todos los campos.');
       return;
     }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const role: 'Alumno FCOM' | 'Lector' = isUniversityEmail(cleanEmail) ? 'Alumno FCOM' : 'Lector';
+    const displayName = name.trim() || cleanEmail.split('@')[0];
+
+    const userData = {
+      id: Date.now().toString(),
+      name: displayName,
+      email: cleanEmail,
+      role,
+      verified: role === 'Alumno FCOM',
+    };
+
+    // Guardar en localStorage para persistencia real al recargar
+    const existingUsers = JSON.parse(localStorage.getItem('tercera_via_users') || '[]');
+    if (isRegister) {
+      localStorage.setItem('tercera_via_users', JSON.stringify([...existingUsers, userData]));
+    }
+    localStorage.setItem('tercera_via_current_user', JSON.stringify(userData));
+
+    onAuthSuccess(userData);
     onClose();
   };
 
-  const title = mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
-
   return (
-    <ModalShell title={title} onClose={onClose}>
-      {mode === 'signup' && (
-        <div className="mb-5 flex items-start gap-2 rounded-lg border border-[#704c12]/30 bg-[#704c12]/5 px-3 py-2.5 text-xs leading-relaxed text-[#5d432c]">
-          <Mail size={16} className="mt-0.5 shrink-0" />
-          <span>
-            Con un correo @us.es o @alum.us.es obtendrás el rol de redactor para publicar trabajos.
-            Con cualquier otro correo serás lector.
-          </span>
-        </div>
-      )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-md rounded-xl bg-[#f8f3e9] border border-[#704c12]/30 p-6 shadow-2xl text-[#5d432c]">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full p-1 hover:bg-[#ebdbc6] transition-colors"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === 'signup' && (
-          <label className="block text-sm font-medium text-black/70">
-            Nombre
-            <input
-              type="text"
-              required
-              minLength={2}
-              maxLength={80}
-              value={name}
-              onChange={(e) => { setName(e.target.value); setError(''); }}
-              className={inputClass}
-              placeholder="Tu nombre visible"
-            />
-          </label>
+        <h2 className="font-serif text-2xl font-bold text-[#704c12] mb-1">
+          {isRegister ? 'Crear cuenta en La Tercera Vía' : 'Iniciar Sesión'}
+        </h2>
+        <p className="text-sm text-[#5d432c]/80 mb-5">
+          Usa tu correo <span className="font-semibold">@alum.us.es</span> para perfil de Redactor FCOM o cualquier correo como Lector.
+        </p>
+
+        {email && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-[#ebdbc6]/70 px-3 py-2 text-xs font-medium">
+            {isUniversityEmail(email) ? (
+              <>
+                <GraduationCap className="h-4 w-4 text-[#704c12]" />
+                <span>Perfil detectado: <strong>Alumno FCOM / Redactor</strong></span>
+              </>
+            ) : (
+              <>
+                <BookOpen className="h-4 w-4 text-[#5d432c]" />
+                <span>Perfil detectado: <strong>Lector</strong></span>
+              </>
+            )}
+          </div>
         )}
 
-        <label className="block text-sm font-medium text-black/70">
-          Correo electrónico
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(''); }}
-            className={inputClass}
-            placeholder="nombre@alum.us.es"
-          />
-        </label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {isRegister && (
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+                Nombre y apellidos
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ej. Laura Gómez"
+                className="w-full rounded-lg border border-[#704c12]/30 bg-white px-3 py-2 text-sm focus:border-[#704c12] focus:outline-none"
+              />
+            </div>
+          )}
 
-        <label className="block text-sm font-medium text-black/70">
-          Contraseña
-          <input
-            type="password"
-            required
-            minLength={6}
-            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            value={password}
-            onChange={(e) => { setPassword(e.target.value); setError(''); }}
-            className={inputClass}
-            placeholder="Mínimo 6 caracteres"
-          />
-        </label>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="usuario@alum.us.es"
+              className="w-full rounded-lg border border-[#704c12]/30 bg-white px-3 py-2 text-sm focus:border-[#704c12] focus:outline-none"
+            />
+          </div>
 
-        {mode === 'signup' && (
-          <label className="block text-sm font-medium text-black/70">
-            Confirmar contraseña
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+              Contraseña
+            </label>
             <input
               type="password"
-              required
-              minLength={6}
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
-              className={inputClass}
-              placeholder="Repite la contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-lg border border-[#704c12]/30 bg-white px-3 py-2 text-sm focus:border-[#704c12] focus:outline-none"
             />
-          </label>
-        )}
+          </div>
 
-        {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-xs font-medium text-red-700">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black disabled:opacity-60"
-        >
-          {mode === 'login' ? <LogIn size={17} /> : <UserPlus size={17} />}
-          {submitting
-            ? 'Procesando...'
-            : mode === 'login'
-              ? 'Iniciar sesión'
-              : 'Registrarse'}
-        </button>
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#704c12] py-2.5 text-sm font-semibold text-white hover:bg-[#5d432c] transition-colors"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {isRegister ? 'Completar registro' : 'Entrar ahora'}
+          </button>
+        </form>
 
-        <button
-          type="button"
-          onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
-          className="w-full text-sm text-black/60 underline underline-offset-4 hover:text-black"
-        >
-          {mode === 'login' ? '¿No tienes cuenta? Crear cuenta' : '¿Ya tienes cuenta? Iniciar sesión'}
-        </button>
-      </form>
-    </ModalShell>
+        <div className="mt-4 text-center text-xs">
+          <button
+            type="button"
+            onClick={() => setIsRegister(!isRegister)}
+            className="underline hover:text-[#704c12]"
+          >
+            {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
-}
+};
