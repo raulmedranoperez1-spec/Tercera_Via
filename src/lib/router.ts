@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { findFormat, type FormatSlug } from '@/lib/formats';
 
 export const SECTION_PATHS = ['/', '/escaner', '/impacto', '/apoyo', '/contacto', '/foro'] as const;
 export type SectionPath = (typeof SECTION_PATHS)[number];
 
 export type Route =
   | { kind: 'section'; path: SectionPath }
+  | { kind: 'format'; slug: FormatSlug }
   | { kind: 'me' }
   | { kind: 'writer'; id: string }
   | { kind: 'article'; id: string }
@@ -32,6 +34,8 @@ export function resolveRoute(path: string): Route {
 
   if (first === 'mi-perfil') return { kind: 'me' };
 
+  if (findFormat(first)) return { kind: 'format', slug: first as FormatSlug };
+
   if (first === 'recuperar') return { kind: 'reset-password' };
 
   if (first === 'admin') return { kind: 'admin' };
@@ -58,6 +62,10 @@ export function resolveRoute(path: string): Route {
 
 export function sectionHref(path: SectionPath): string {
   return `#${path}`;
+}
+
+export function formatHref(slug: FormatSlug): string {
+  return `#/${slug}`;
 }
 
 export function profileHref(): string {

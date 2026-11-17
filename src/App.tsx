@@ -8,6 +8,7 @@ import Contacto from '@/components/Contacto';
 import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
 import WriterProfilePage from '@/components/WriterProfilePage';
+import FormatSectionPage from '@/components/FormatSectionPage';
 import ArticleDetailPage from '@/components/ArticleDetailPage';
 import ProjectDetailPage from '@/components/ProjectDetailPage';
 import CodigoDeontologico from '@/components/CodigoDeontologico';
@@ -41,6 +42,8 @@ function App() {
   let content: ReactNode;
   if (route.kind === 'section') {
     content = SECTION_VIEWS[route.path];
+  } else if (route.kind === 'format') {
+    content = <FormatSectionPage slug={route.slug} />;
   } else if (route.kind === 'me') {
     content = session ? (
       <WriterProfilePage writerId={session.user.id} />

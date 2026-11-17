@@ -3,7 +3,8 @@ import { BookOpen, ChevronDown, LogOut, BadgeCheck, UserCircle, MessageCircle, S
 import { supabase } from '@/lib/supabase';
 import { canSubmitWork, roleLabel, useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
-import { navigateTo, sectionHref, profileHref, forumHref, codigoDeontologicoHref, type SectionPath } from '@/lib/router';
+import { navigateTo, sectionHref, formatHref, profileHref, forumHref, codigoDeontologicoHref, type SectionPath } from '@/lib/router';
+import { FORMATS } from '@/lib/formats';
 import { supportTiers, type SupportTier } from '@/data/mockData';
 import BrandLogo from '@/components/BrandLogo';
 
@@ -13,13 +14,10 @@ interface MenuItem {
   href?: string;
 }
 
-const formatItems: MenuItem[] = [
-  { label: 'Artículos', path: '/escaner' },
-  { label: 'Ensayos', path: '/escaner' },
-  { label: 'Entrevistas', path: '/escaner' },
-  { label: 'Podcast', path: '/escaner' },
-  { label: 'Reportajes', path: '/escaner' },
-];
+const formatItems = FORMATS.map((format) => ({
+  label: format.label,
+  href: formatHref(format.slug),
+}));
 
 const styleItems: MenuItem[] = [
   { label: 'Código deontológico', path: '/', href: codigoDeontologicoHref() },

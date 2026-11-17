@@ -45,6 +45,15 @@ export function findFormat(slug: string): FormatDef | undefined {
   return FORMATS.find((format) => format.slug === slug);
 }
 
+export function findFormatByDbValue(dbValue: string): FormatDef | undefined {
+  return FORMATS.find((format) => format.dbValue === dbValue);
+}
+
+export function singularFormatLabel(dbValue: string): string {
+  const format = findFormatByDbValue(dbValue);
+  return format ? format.label.replace(/s$/, '') : 'Contenido';
+}
+
 export function trackLabel(value: string): string {
   return TRACK_OPTIONS.find((track) => track.value === value)?.label ?? value;
 }

@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Calendar, ExternalLink, Loader2 } from 'lucide-react';
 import { fetchProjectDetail, fetchWriterProfile, type ProjectDetail, type WriterProfile } from '@/lib/writers';
 import { formatDate, displayName } from '@/lib/contentTypes';
-import { sectionHref, writerHref } from '@/lib/router';
+import { formatHref, writerHref } from '@/lib/router';
+import ContentGate from '@/components/ContentGate';
+import { useAuth } from '@/lib/authContext';
 
 interface ProjectDetailPageProps {
   projectId: string;
@@ -53,22 +55,37 @@ export default function ProjectDetailPage({ projectId }: ProjectDetailPageProps)
     );
   }
 
+  const { session } = useAuth();
+
   if (error || !project) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="text-lg text-ink-600">{error || 'Proyecto no encontrado.'}</p>
-        <a href={sectionHref('/')} className="mt-6 inline-block rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]">
-          Volver al inicio
+        <a href={formatHref('reportajes')} className="mt-6 inline-block rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]">
+          Volver a reportajes
         </a>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+        <a href={formatHref('reportajes')} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-400 transition-colors hover:text-[#704c12]">
+          <ArrowLeft size={16} />
+          Volver a reportajes
+        </a>
+        <ProjectPreview project={project} author={author} />
+        <ContentGate tier="login" formatLabel="Reportaje" />
       </div>
     );
   }
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-      <a href={sectionHref('/')} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-400 transition-colors hover:text-[#704c12]">
+      <a href={formatHref('reportajes')} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-400 transition-colors hover:text-[#704c12]">
         <ArrowLeft size={16} />
-        Volver
+        Volver a reportajes
       </a>
 
       {/* Cover */}
@@ -125,6 +142,34 @@ export default function ProjectDetailPage({ projectId }: ProjectDetailPageProps)
           Ver proyecto externo
         </a>
       )}
+    </article>
+  );
+}
+
+function ProjectPreview({ project, author }: { project: ProjectDetail; author: WriterProfile | null }) {
+  return (
+    <article className="mx-auto max-w-3xl">
+      {project.cover_image_url && (
+        <div className="mb-8 aspect-[16/9] w-full overflow-hidden rounded-xl bg-paper-300">
+          <img src={project.cover_image_url} alt={project.title} className="h-full w-full object-cover" />
+        </div>
+      )}
+      <h1 className="font-serif text-3xl font-semibold leading-tight text-ink-800 sm:text-4xl">{project.title}</h1>
+      <p className="mt-4 text-lg leading-relaxed text-ink-500">{project.description}</p>
+      <div className="mt-6 flex flex-wrap items-center gap-4 border-y border-paper-400/40 py-4 text-sm text-ink-400">
+        <span className="flex items-center gap-1.5">
+          <Calendar size={15} />
+          {formatDate(project.published_at)}
+        </span>
+        {author && (
+          <a
+            href={writerHref(author.id)}
+            className="ml-auto flex items-center gap-2 rounded-full bg-paper-200 px-3 py-1.5 text-xs font-medium text-ink-600 transition-colors hover:bg-paper-300"
+          >
+            {displayName(author.display_name, author.username ?? 'Escritor')}
+          </a>
+        )}
+      </div>
     </article>
   );
 }

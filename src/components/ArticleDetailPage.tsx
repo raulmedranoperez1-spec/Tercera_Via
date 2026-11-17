@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Heart, Bookmark, Calendar, Loader2 } from 'lucide-react';
 import { fetchArticleDetail, fetchWriterProfile, type ArticleDetail, type WriterProfile } from '@/lib/writers';
 import { formatDate, displayName } from '@/lib/contentTypes';
-import { sectionHref, writerHref } from '@/lib/router';
+import { findFormatByDbValue } from '@/lib/formats';
+import { formatHref, writerHref } from '@/lib/router';
+import ContentGate from '@/components/ContentGate';
+import { useAuth } from '@/lib/authContext';
 
 interface ArticleDetailPageProps {
   articleId: string;
@@ -53,22 +56,54 @@ export default function ArticleDetailPage({ articleId }: ArticleDetailPageProps)
     );
   }
 
+  const { session, profile } = useAuth();
+  const articleFormat = article ? findFormatByDbValue(article.format) : undefined;
+  const gateTier = article?.format === 'articulo' || article?.format === 'ensayo' ? 'login' : 'subscribe';
+  const formatLabel = article ? singularLabel(article.format) : 'Contenido';
+  const hasFullAccess = Boolean(session) && (gateTier === 'login' || (profile?.is_socio ?? false));
+
   if (error || !article) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="text-lg text-ink-600">{error || 'Artículo no encontrado.'}</p>
-        <a href={sectionHref('/')} className="mt-6 inline-block rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]">
-          Volver al inicio
+        <a href={formatHref(articleFormat?.slug ?? 'articulos')} className="mt-6 inline-block rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]">
+          Volver a {articleFormat ? articleFormat.label.toLowerCase() : 'la sección'}
         </a>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+        <a href={formatHref(articleFormat?.slug ?? 'articulos')} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-400 transition-colors hover:text-[#704c12]">
+          <ArrowLeft size={16} />
+          Volver a {articleFormat ? articleFormat.label.toLowerCase() : 'la sección'}
+        </a>
+        <ArticlePreview article={article} author={author} />
+        <ContentGate tier="login" formatLabel={formatLabel} />
+      </div>
+    );
+  }
+
+  if (!hasFullAccess) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+        <a href={formatHref(articleFormat?.slug ?? 'articulos')} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-400 transition-colors hover:text-[#704c12]">
+          <ArrowLeft size={16} />
+          Volver a {articleFormat ? articleFormat.label.toLowerCase() : 'la sección'}
+        </a>
+        <ArticlePreview article={article} author={author} />
+        <ContentGate tier="subscribe" formatLabel={formatLabel} />
       </div>
     );
   }
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-      <a href={sectionHref('/')} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-400 transition-colors hover:text-[#704c12]">
+      <a href={formatHref(articleFormat?.slug ?? 'articulos')} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-400 transition-colors hover:text-[#704c12]">
         <ArrowLeft size={16} />
-        Volver
+        Volver a {articleFormat ? articleFormat.label.toLowerCase() : 'la sección'}
       </a>
 
       {/* Cover */}
@@ -116,6 +151,41 @@ export default function ArticleDetailPage({ articleId }: ArticleDetailPageProps)
       <div className="mt-8 space-y-4 text-base leading-relaxed text-ink-700">
         {article.content.split('\n').map((para, i) =>
           para.trim() ? <p key={i}>{para}</p> : null
+        )}
+      </div>
+    </article>
+  );
+}
+
+function singularLabel(dbValue: string): string {
+  if (dbValue === 'ensayo') return 'Ensayo';
+  if (dbValue === 'entrevista') return 'Entrevista';
+  if (dbValue === 'reportaje') return 'Reportaje';
+  return 'Artículo';
+}
+
+function ArticlePreview({ article, author }: { article: ArticleDetail; author: WriterProfile | null }) {
+  return (
+    <article className="mx-auto max-w-3xl">
+      {article.cover_image_url && (
+        <div className="mb-8 aspect-[16/9] w-full overflow-hidden rounded-xl bg-paper-300">
+          <img src={article.cover_image_url} alt={article.title} className="h-full w-full object-cover" />
+        </div>
+      )}
+      <h1 className="font-serif text-3xl font-semibold leading-tight text-ink-800 sm:text-4xl">{article.title}</h1>
+      <p className="mt-4 text-lg leading-relaxed text-ink-500">{article.excerpt}</p>
+      <div className="mt-6 flex flex-wrap items-center gap-4 border-y border-paper-400/40 py-4 text-sm text-ink-400">
+        <span className="flex items-center gap-1.5">
+          <Calendar size={15} />
+          {formatDate(article.published_at)}
+        </span>
+        {author && (
+          <a
+            href={writerHref(author.id)}
+            className="ml-auto flex items-center gap-2 rounded-full bg-paper-200 px-3 py-1.5 text-xs font-medium text-ink-600 transition-colors hover:bg-paper-300"
+          >
+            {displayName(author.display_name, author.username ?? 'Escritor')}
+          </a>
         )}
       </div>
     </article>
