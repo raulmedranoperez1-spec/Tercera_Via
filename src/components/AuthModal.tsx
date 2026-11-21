@@ -97,36 +97,6 @@ const [verificationSent, setVerificationSent] = useState(false);
     setLoading(false);
   }
 };
-
-
-    if (!email.trim() || !password.trim() || (isRegister && !name.trim())) {
-      setError('Por favor, completa todos los campos.');
-      return;
-    }
-
-    const cleanEmail = email.trim().toLowerCase();
-    const role: 'Alumno FCOM' | 'Lector' = isUniversityEmail(cleanEmail) ? 'Alumno FCOM' : 'Lector';
-    const displayName = name.trim() || cleanEmail.split('@')[0];
-
-    const userData = {
-      id: Date.now().toString(),
-      name: displayName,
-      email: cleanEmail,
-      role,
-      verified: role === 'Alumno FCOM',
-    };
-
-    // Guardar en localStorage para persistencia real al recargar
-    const existingUsers = JSON.parse(localStorage.getItem('tercera_via_users') || '[]');
-    if (isRegister) {
-      localStorage.setItem('tercera_via_users', JSON.stringify([...existingUsers, userData]));
-    }
-    localStorage.setItem('tercera_via_current_user', JSON.stringify(userData));
-
-    onAuthSuccess(userData);
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-md rounded-xl bg-[#f8f3e9] border border-[#704c12]/30 p-6 shadow-2xl text-[#5d432c]">
