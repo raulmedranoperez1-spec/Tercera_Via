@@ -66,3 +66,34 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
+          await loadProfile(currentSession.user.id);
+        } else {
+          setProfile(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [loadProfile]);
+
+  const value = useMemo(() => ({
+    session,
+    profile,
+    loading,
+    refreshProfile: async () => {
+      if (session?.user) {
+        await loadProfile(session.user.id);
+      }
+    }
+  }), [session, profile, loading, loadProfile]);
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
