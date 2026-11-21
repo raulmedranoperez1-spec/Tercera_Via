@@ -13,9 +13,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-const [loading, setLoading] = useState(false);
-const [verificationSent, setVerificationSent] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+
   if (!isOpen) return null;
 
   const isUniversityEmail = (addr: string) => {
@@ -24,30 +24,31 @@ const [verificationSent, setVerificationSent] = useState(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
 
-  if (!cleanEmail || !password.trim() || (isRegister && !name.trim())) {
-    setError('Por favor, completa todos los campos.');
-    return;
-  }
-setLoading(true);
+    if (!cleanEmail || !password.trim() || (isRegister && !name.trim())) {
+      setError('Por favor, completa todos los campos.');
+      return;
+    }
 
-  const demoUser = {
-    name: name.trim() || cleanEmail.split('@')[0] || 'Usuario Demo',
-    email: cleanEmail,
-    role: (isUniversityEmail(cleanEmail) ? 'Alumno FCOM' : 'Lector') as 'Alumno FCOM' | 'Lector',
+    setLoading(true);
+
+    const demoUser = {
+      name: name.trim() || cleanEmail.split('@')[0] || 'Usuario Demo',
+      email: cleanEmail,
+      role: (isUniversityEmail(cleanEmail) ? 'Alumno FCOM' : 'Lector') as 'Alumno FCOM' | 'Lector',
+    };
+
+    localStorage.setItem('tercera_via_user', JSON.stringify(demoUser));
+    window.dispatchEvent(new Event('storage'));
+
+    setLoading(false);
+    onAuthSuccess(demoUser);
+    onClose();
   };
-
-  localStorage.setItem('tercera_via_user', JSON.stringify(demoUser));
-  window.dispatchEvent(new Event('storage'));
-
-  setLoading(false);
-  onAuthSuccess(demoUser);
-  onClose();
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-md rounded-xl bg-[#f8f3e9] border border-[#704c12]/30 p-6 shadow-2xl text-[#5d432c]">
