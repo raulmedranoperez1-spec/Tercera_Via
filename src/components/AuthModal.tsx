@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, GraduationCap, BookOpen, MailCheck } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -34,8 +33,7 @@ const [verificationSent, setVerificationSent] = useState(false);
     setError('Por favor, completa todos los campos.');
     return;
   }
-
-  setLoading(true);
+setLoading(true);
 
   try {
     const wantsStudentRole = isUniversityEmail(cleanEmail);
