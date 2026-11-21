@@ -106,7 +106,30 @@ const [verificationSent, setVerificationSent] = useState(false);
         >
           <X className="h-5 w-5" />
         </button>
-
+        {verificationSent ? (
+          <div className="py-6 text-center space-y-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#704c12]/10 text-[#704c12]">
+              <MailCheck className="h-6 w-6" />
+            </div>
+            <h3 className="font-serif text-xl font-bold">Revisa tu correo institucional</h3>
+            <p className="text-sm opacity-90">
+              Hemos enviado un enlace de verificación a <strong>{email}</strong>.
+              Ábrelo desde Outlook (revisa también <em>Correo no deseado</em>) para activar tu cuenta de <strong>Alumno FCOM</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setVerificationSent(false);
+                onClose();
+              }}
+              className="w-full rounded-lg bg-[#5d432c] px-4 py-2.5 text-sm font-medium text-[#f8f3e9] hover:opacity-90 transition-opacity"
+            >
+              Entendido
+            </button>
+          </div>
+        ) : (
+          <>
+            
         <h2 className="font-serif text-2xl font-bold text-[#704c12] mb-1">
           {isRegister ? 'Crear cuenta en La Tercera Vía' : 'Iniciar Sesión'}
         </h2>
@@ -191,7 +214,10 @@ const [verificationSent, setVerificationSent] = useState(false);
           >
             {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
           </button>
-        </div>
+        </div>           
+          </>
+        )}
+        
       </div>
     </div>
   );
