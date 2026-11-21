@@ -35,66 +35,19 @@ const [verificationSent, setVerificationSent] = useState(false);
   }
 setLoading(true);
 
-  try {
-    const wantsStudentRole = isUniversityEmail(cleanEmail);
-    const displayName = name.trim() || cleanEmail.split('@')[0];
+  const demoUser = {
+    name: name.trim() || cleanEmail.split('@')[0] || 'Usuario Demo',
+    email: cleanEmail,
+    role: (isUniversityEmail(cleanEmail) ? 'Alumno FCOM' : 'Lector') as 'Alumno FCOM' | 'Lector',
+  };
 
-    if (isRegister) {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            full_name: displayName,
-            requested_role: wantsStudentRole ? 'Alumno FCOM' : 'Lector',
-          },
-        },
-      });
+  localStorage.setItem('tercera_via_user', JSON.stringify(demoUser));
+  window.dispatchEvent(new Event('storage'));
 
-      if (signUpError) throw signUpError;
+  setLoading(false);
+  onAuthSuccess(demoUser);
+  onClose();
 
-      const isConfirmed = Boolean(data.user?.email_confirmed_at);
-
-      if (!isConfirmed) {
-        setVerificationSent(true);
-        setLoading(false);
-        return;
-      }
-
-      onAuthSuccess({
-        name: displayName,
-        email: cleanEmail,
-        role: wantsStudentRole ? 'Alumno FCOM' : 'Lector',
-      });
-      onClose();
-    } else {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password,
-      });
-
-      if (signInError) throw signInError;
-
-      if (data.user) {
-        const isConfirmed = Boolean(data.user.email_confirmed_at);
-        const assignedRole: 'Alumno FCOM' | 'Lector' =
-          wantsStudentRole && isConfirmed ? 'Alumno FCOM' : 'Lector';
-
-        onAuthSuccess({
-          name: data.user.user_metadata?.full_name || displayName,
-          email: cleanEmail,
-          role: assignedRole,
-        });
-        onClose();
-      }
-    }
-  } catch (err: any) {
-    setError(err?.message || 'No se pudo completar la operación.');
-  } finally {
-    setLoading(false);
-  }
-};
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-md rounded-xl bg-[#f8f3e9] border border-[#704c12]/30 p-6 shadow-2xl text-[#5d432c]">
