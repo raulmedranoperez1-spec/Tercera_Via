@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, CheckCircle2, GraduationCap, BookOpen } from 'lucide-react';
+import { X, CheckCircle2, GraduationCap, BookOpen, MailCheck } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,7 +14,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
+const [loading, setLoading] = useState(false);
+const [verificationSent, setVerificationSent] = useState(false);
+  
   if (!isOpen) return null;
 
   const isUniversityEmail = (addr: string) => {
@@ -21,9 +24,80 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
     return clean.endsWith('@alum.us.es') || clean.endsWith('@us.es');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (!cleanEmail || !password.trim() || (isRegister && !name.trim())) {
+    setError('Por favor, completa todos los campos.');
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const wantsStudentRole = isUniversityEmail(cleanEmail);
+    const displayName = name.trim() || cleanEmail.split('@')[0];
+
+    if (isRegister) {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            full_name: displayName,
+            requested_role: wantsStudentRole ? 'Alumno FCOM' : 'Lector',
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      const isConfirmed = Boolean(data.user?.email_confirmed_at);
+
+      if (!isConfirmed) {
+        setVerificationSent(true);
+        setLoading(false);
+        return;
+      }
+
+      onAuthSuccess({
+        name: displayName,
+        email: cleanEmail,
+        role: wantsStudentRole ? 'Alumno FCOM' : 'Lector',
+      });
+      onClose();
+    } else {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+
+      if (signInError) throw signInError;
+
+      if (data.user) {
+        const isConfirmed = Boolean(data.user.email_confirmed_at);
+        const assignedRole: 'Alumno FCOM' | 'Lector' =
+          wantsStudentRole && isConfirmed ? 'Alumno FCOM' : 'Lector';
+
+        onAuthSuccess({
+          name: data.user.user_metadata?.full_name || displayName,
+          email: cleanEmail,
+          role: assignedRole,
+        });
+        onClose();
+      }
+    }
+  } catch (err: any) {
+    setError(err?.message || 'No se pudo completar la operación.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     if (!email.trim() || !password.trim() || (isRegister && !name.trim())) {
       setError('Por favor, completa todos los campos.');
