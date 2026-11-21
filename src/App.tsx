@@ -19,11 +19,11 @@ import ForumRulesPage from '@/components/ForumRulesPage';
 import ForumModerationPage from '@/components/ForumModerationPage';
 import ForumAdminPage from '@/components/ForumAdminPage';
 import AdminPage from '@/components/AdminPage';
-import { toSectionPath, useRoute, resolveRoute, type SectionPath } from '@/lib/router';
+import { useRoute, resolveRoute } from '@/lib/router';
 import { useScrollProgress } from '@/hooks/useReveal';
 import { useAuth } from '@/lib/authContext';
 
-const SECTION_VIEWS: Record<SectionPath, ReactNode> = {
+const SECTION_VIEWS: Record<string, ReactNode> = {
   '/': <Hero />,
   '/escaner': <EscanerDeMarcos />,
   '/impacto': <FichaDeImpacto />,
@@ -41,7 +41,7 @@ function App() {
 
   let content: ReactNode;
   if (route.kind === 'section') {
-    content = SECTION_VIEWS[route.path];
+    content = SECTION_VIEWS[route.path] ?? <Hero />;
   } else if (route.kind === 'format') {
     content = <FormatSectionPage slug={route.slug} />;
   } else if (route.kind === 'me') {
@@ -75,7 +75,7 @@ function App() {
   } else if (route.kind === 'admin') {
     content = <AdminPage />;
   } else {
-    content = SECTION_VIEWS['/'];
+    content = <Hero />;
   }
 
   return (
