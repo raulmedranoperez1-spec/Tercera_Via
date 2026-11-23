@@ -15,6 +15,3 @@ verify_jwt = false
 
 [functions.news-review]
 verify_jwt = true
-
-[functions.projects-sheet]
-verify_jwt = false

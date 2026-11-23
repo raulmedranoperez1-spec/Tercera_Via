@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowUpDown, ExternalLink, Loader2, MicOff, Newspaper } from 'lucide-react';
+import Papa from 'papaparse';
 import { findFormat, type FormatSlug } from '@/lib/formats';
-import { supabase, supabaseUrl, supabaseAnonKey } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import ArticleCard from '@/components/ArticleCard';
 import PodcastCard from '@/components/PodcastCard';
 import ContentGate from '@/components/ContentGate';
@@ -12,6 +13,60 @@ interface SheetProject {
   titulo: string;
   descripcion: string;
   archivoUrl: string;
+}
+
+const SHEET_CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQSa6mOIF9UmJwpabYHpwnEoxH_ILuOiIjmyE6BFGKGQW2rc7P3IlUA1uxwkRuH_XhIAYtu5y59lzQ0/pub?output=csv';
+
+function normalize(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .toUpperCase();
+}
+
+function isPublished(value: string): boolean {
+  const norm = normalize(value);
+  return norm === 'SI';
+}
+
+async function loadSheetProjects(): Promise<SheetProject[]> {
+  const cacheBust = `${SHEET_CSV_URL}&cacheBust=${Date.now()}`;
+  const res = await fetch(cacheBust, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+
+  return new Promise<SheetProject[]>((resolve, reject) => {
+    Papa.parse<Record<string, string>>(text, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (result) => {
+        const projects: SheetProject[] = [];
+        for (const row of result.data) {
+          const publicadoCol = Object.keys(row).find((k) => normalize(k) === 'PUBLICADO');
+          if (!publicadoCol || !isPublished(row[publicadoCol] ?? '')) continue;
+
+          const tituloCol = Object.keys(row).find((k) => normalize(k) === 'TITULO DEL PROYECTO');
+          const descCol = Object.keys(row).find(
+            (k) => normalize(k) === 'DESCRIPCION O RESUMEN' || normalize(k) === 'DESCRIPCION',
+          );
+          const archivoCol = Object.keys(row).find((k) => normalize(k) === 'SUBIR ARCHIVOS' || normalize(k) === 'ARCHIVOS');
+
+          const titulo = tituloCol ? (row[tituloCol] ?? '').trim() : '';
+          if (!titulo) continue;
+
+          projects.push({
+            titulo,
+            descripcion: descCol ? (row[descCol] ?? '').trim() : '',
+            archivoUrl: archivoCol ? (row[archivoCol] ?? '').trim() : '',
+          });
+        }
+        resolve(projects);
+      },
+      error: (err) => reject(err),
+    });
+  });
 }
 
 interface FormatSectionPageProps {
@@ -48,18 +103,9 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
     const load = async () => {
       try {
         if (isSheetDriven) {
-          const apiUrl = `${supabaseUrl}/functions/v1/projects-sheet`;
-          const res = await fetch(apiUrl, {
-            headers: {
-              apikey: supabaseAnonKey,
-              Authorization: `Bearer ${supabaseAnonKey}`,
-            },
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = await res.json();
-          if (json.error) throw new Error(json.error);
+          const projects = await loadSheetProjects();
           if (!active) return;
-          setSheetProjects((json.projects ?? []) as SheetProject[]);
+          setSheetProjects(projects);
           setLoading(false);
           return;
         }
