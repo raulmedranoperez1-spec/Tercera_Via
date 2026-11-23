@@ -25,8 +25,7 @@ export default function ModalProvider({ children }: { children: ReactNode }) {
       {request?.kind === 'edit-profile' && <EditProfileModal onClose={close} />}
       {request?.kind === 'share' && (
         <SubmitWorkModal
-          formatSlug={request.formatSlug}
-          onSubmitted={request.onSubmitted}
+          initialTab={request.initialTab}
           onClose={close}
         />
       )}

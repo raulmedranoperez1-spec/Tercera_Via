@@ -7,7 +7,7 @@ export type ModalRequest =
   | { kind: 'edit-profile' }
   | { kind: 'reset-password' }
   | { kind: 'subscribe' }
-  | { kind: 'share'; formatSlug?: FormatSlug; onSubmitted?: () => void }
+  | { kind: 'share'; formatSlug?: FormatSlug; initialTab?: 'creativa' | 'informativa'; onSubmitted?: () => void }
   | { kind: 'forum-new-thread'; categoryId: string; categoryName: string };
 
 export interface ModalControls {

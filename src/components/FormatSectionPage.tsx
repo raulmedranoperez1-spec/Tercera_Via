@@ -3,6 +3,7 @@ import { ExternalLink, Headphones, Loader2, Newspaper } from 'lucide-react';
 import Papa from 'papaparse';
 import { findFormat, type FormatSlug } from '@/lib/formats';
 import { sectionHref } from '@/lib/router';
+import { useModal } from '@/lib/modalContext';
 import NewsCard from '@/components/NewsCard';
 
 interface SheetProject {
@@ -166,6 +167,7 @@ interface FormatSectionPageProps {
 
 export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const format = findFormat(slug);
+  const { open } = useModal();
   const [sheetProjects, setSheetProjects] = useState<SheetProject[]>([]);
   const [newsRows, setNewsRows] = useState<NewsRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -256,6 +258,19 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
           </button>
         ))}
       </div>
+
+      {format?.slug === 'noticias' && (
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => open({ kind: 'share', initialTab: 'informativa' })}
+            className="inline-flex items-center gap-2 rounded-full border border-[#704c12]/40 bg-paper-50 px-5 py-2 text-sm font-medium text-[#704c12] transition-colors hover:bg-[#704c12] hover:text-white"
+          >
+            <Newspaper size={15} />
+            Publicar noticia
+          </button>
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (
