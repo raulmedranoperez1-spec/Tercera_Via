@@ -3,8 +3,7 @@ import { ExternalLink, Headphones, Loader2, Newspaper } from 'lucide-react';
 import Papa from 'papaparse';
 import { findFormat, type FormatSlug } from '@/lib/formats';
 import { sectionHref } from '@/lib/router';
-import { loadEscanerNews, type EscanerNews } from '@/lib/escanerNews';
-import EscanerNewsDetail from '@/components/EscanerNewsDetail';
+import NewsCard from '@/components/NewsCard';
 
 interface SheetProject {
   titulo: string;
@@ -28,6 +27,9 @@ type FormatFilter = (typeof FORMAT_FILTERS)[number];
 
 const SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vQSa6mOIF9UmJwpabYHpwnEoxH_ILuOiIjmyE6BFGKGQW2rc7P3IlUA1uxwkRuH_XhIAYtu5y59lzQ0/pub?output=csv';
+
+const NEWS_SHEET_CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRR6DJsWHaqPTFO7b6lJKnweWyL6gfrmJOg-wIKoL2sZA-o0q9ztMrkZknlUOWolkZZHxzt6GGfu__c/pub?output=csv';
 
 function normalize(value: string): string {
   return value
@@ -101,6 +103,63 @@ async function loadSheetProjects(): Promise<SheetProject[]> {
   });
 }
 
+export interface NewsRow {
+  titulo: string;
+  descripcion: string;
+  archivoUrl: string;
+  fuenteUrl: string;
+  medio1: string;
+  titular1: string;
+  medio2: string;
+  titular2: string;
+}
+
+async function loadNewsRows(): Promise<NewsRow[]> {
+  const url = `${NEWS_SHEET_CSV_URL}&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+
+  return new Promise<NewsRow[]>((resolve, reject) => {
+    Papa.parse<Record<string, string>>(text, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (result) => {
+        const rows: NewsRow[] = [];
+        for (const row of result.data) {
+          const publicadoCol = Object.keys(row).find((k) => normalize(k) === 'PUBLICADO');
+          if (!publicadoCol || !isPublished(row[publicadoCol] ?? '')) continue;
+
+          const tituloCol = Object.keys(row).find((k) => normalize(k) === 'TITULO DEL PROYECTO');
+          const descCol = Object.keys(row).find((k) => normalize(k) === 'DESCRIPCION DEL PROYECTO' || normalize(k) === 'DESCRIPCION O RESUMEN' || normalize(k) === 'DESCRIPCION');
+          const archivoCol = Object.keys(row).find((k) => normalize(k) === 'SUBIR ARCHIVOS' || normalize(k) === 'ARCHIVOS');
+          const fuenteCol = Object.keys(row).find((k) => normalize(k) === 'FUENTES');
+          const medio1Col = Object.keys(row).find((k) => normalize(k) === 'MEDIO 1');
+          const titular1Col = Object.keys(row).find((k) => normalize(k) === 'TITULAR 1');
+          const medio2Col = Object.keys(row).find((k) => normalize(k) === 'MEDIO 2');
+          const titular2Col = Object.keys(row).find((k) => normalize(k) === 'TITULAR 2');
+
+          const titulo = tituloCol ? (row[tituloCol] ?? '').trim() : '';
+          if (!titulo) continue;
+
+          rows.push({
+            titulo,
+            descripcion: descCol ? (row[descCol] ?? '').trim() : '',
+            archivoUrl: archivoCol ? (row[archivoCol] ?? '').trim() : '',
+            fuenteUrl: fuenteCol ? (row[fuenteCol] ?? '').trim() : '',
+            medio1: medio1Col ? (row[medio1Col] ?? '').trim() : '',
+            titular1: titular1Col ? (row[titular1Col] ?? '').trim() : '',
+            medio2: medio2Col ? (row[medio2Col] ?? '').trim() : '',
+            titular2: titular2Col ? (row[titular2Col] ?? '').trim() : '',
+          });
+        }
+        resolve(rows);
+      },
+      error: (err) => reject(err),
+    });
+  });
+}
+
 interface FormatSectionPageProps {
   slug: FormatSlug;
 }
@@ -108,18 +167,10 @@ interface FormatSectionPageProps {
 export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const format = findFormat(slug);
   const [sheetProjects, setSheetProjects] = useState<SheetProject[]>([]);
+  const [newsRows, setNewsRows] = useState<NewsRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sheetFilter, setSheetFilter] = useState<FormatFilter>('Todos');
-  const [localNews, setLocalNews] = useState<EscanerNews[]>([]);
-  const [openEscaner, setOpenEscaner] = useState<EscanerNews | null>(null);
-
-  useEffect(() => {
-    setLocalNews(loadEscanerNews());
-    const onStorage = () => setLocalNews(loadEscanerNews());
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
 
   const initialFilter = (FORMAT_FILTERS.includes(format?.label as FormatFilter) ? format?.label : 'Todos') as FormatFilter;
 
@@ -145,6 +196,19 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
         if (active) setLoading(false);
       });
 
+    if (format?.slug === 'noticias') {
+      loadNewsRows()
+        .then((rows) => {
+          if (!active) return;
+          setNewsRows(rows);
+        })
+        .catch(() => {
+          if (active) setError('No se pudo cargar el contenido. Inténtalo de nuevo.');
+        });
+    } else if (active) {
+      setNewsRows([]);
+    }
+
     return () => {
       active = false;
     };
@@ -158,9 +222,10 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const showLocalNews =
     sheetFilter === 'Noticias' || (sheetFilter === 'Todos' && format?.slug === 'noticias');
 
-  if (openEscaner) {
-    return <EscanerNewsDetail news={openEscaner} />;
-  }
+  const visibleNews = useMemo(() => {
+    if (!showLocalNews) return [];
+    return newsRows;
+  }, [newsRows, showLocalNews]);
 
   if (!format) return null;
 
@@ -215,30 +280,7 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {showLocalNews &&
-            localNews.map((news) => (
-              <button
-                key={news.id}
-                onClick={() => setOpenEscaner(news)}
-                className="group flex flex-col overflow-hidden rounded-xl border border-paper-400/50 bg-paper-50 text-left shadow-sm transition-all hover:shadow-md"
-              >
-                <div className="aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-earth-800 to-earth-900">
-                  <div className="flex h-full w-full items-center justify-center">
-                    <span className="font-serif text-3xl text-paper-100/60">{news.titulo.charAt(0).toUpperCase()}</span>
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col p-4">
-                  <span className="mb-2 inline-flex w-fit items-center rounded-full bg-earth-800/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-earth-800">
-                    Noticias · Escáner de Marcos
-                  </span>
-                  <h3 className="font-serif text-lg font-semibold leading-snug text-ink-800 transition-colors group-hover:text-[#704c12]">
-                    {news.titulo}
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-ink-500">
-                    Marco 1: {news.marco1.titular || '—'} · Marco 2: {news.marco2.titular || '—'}
-                  </p>
-                </div>
-              </button>
-            ))}
+            visibleNews.map((news, idx) => <NewsCard key={idx} news={news} />)}
           {filteredSheetProjects.map((project, idx) => {
             const isPodcastCard = normalize(project.formato) === 'PODCASTS' || normalize(project.formato) === 'PODCAST';
             return (
