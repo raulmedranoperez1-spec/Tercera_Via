@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowUpDown, ExternalLink, Loader2, MicOff, Newspaper } from 'lucide-react';
 import { findFormat, type FormatSlug } from '@/lib/formats';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseUrl, supabaseAnonKey } from '@/lib/supabase';
 import ArticleCard from '@/components/ArticleCard';
 import PodcastCard from '@/components/PodcastCard';
 import ContentGate from '@/components/ContentGate';
@@ -48,10 +48,11 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
     const load = async () => {
       try {
         if (isSheetDriven) {
-          const apiUrl = `${import.meta.env.VITE_SUPABASE_URL ?? 'https://fagililzingryplvnjtd.supabase.co'}/functions/v1/projects-sheet`;
+          const apiUrl = `${supabaseUrl}/functions/v1/projects-sheet`;
           const res = await fetch(apiUrl, {
             headers: {
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY ?? 'sb_publishable_aR4QujoqD6kA-HA3-wif7w_eQpbq0_P'}`,
+              apikey: supabaseAnonKey,
+              Authorization: `Bearer ${supabaseAnonKey}`,
             },
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
