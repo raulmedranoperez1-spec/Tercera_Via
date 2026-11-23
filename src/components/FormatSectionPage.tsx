@@ -115,26 +115,44 @@ export interface NewsRow {
   titular2: string;
 }
 
-async function loadNewsRows(): Promise<NewsRow[]> {
+export interface NewsLoadResult {
+  rows: NewsRow[];
+  totalRows: number;
+  error: string;
+}
+
+async function loadNewsRows(): Promise<NewsLoadResult> {
   const url = `${NEWS_SHEET_CSV_URL}&t=${Date.now()}`;
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: 'no-store' });
+  } catch {
+    return { rows: [], totalRows: 0, error: 'Error de red: no se pudo conectar con la hoja de noticias.' };
+  }
+  if (!res.ok) {
+    return { rows: [], totalRows: 0, error: `Error de red: la hoja respondió HTTP ${res.status}.` };
+  }
   const text = await res.text();
 
-  return new Promise<NewsRow[]>((resolve, reject) => {
+  return new Promise<NewsLoadResult>((resolve) => {
     Papa.parse<Record<string, string>>(text, {
       header: true,
       skipEmptyLines: true,
       complete: (result) => {
+        const totalRows = result.data.length;
         const rows: NewsRow[] = [];
         for (const row of result.data) {
           const publicadoCol = Object.keys(row).find((k) => normalize(k) === 'PUBLICADO');
           if (!publicadoCol || !isPublished(row[publicadoCol] ?? '')) continue;
 
           const tituloCol = Object.keys(row).find((k) => normalize(k) === 'TITULO DEL PROYECTO');
-          const descCol = Object.keys(row).find((k) => normalize(k) === 'DESCRIPCION DEL PROYECTO' || normalize(k) === 'DESCRIPCION O RESUMEN' || normalize(k) === 'DESCRIPCION');
+          const descCol = Object.keys(row).find(
+            (k) => normalize(k) === 'DESCRIPCION DEL PROYECTO' || normalize(k) === 'DESCRIPCION O RESUMEN' || normalize(k) === 'DESCRIPCION',
+          );
           const archivoCol = Object.keys(row).find((k) => normalize(k) === 'SUBIR ARCHIVOS' || normalize(k) === 'ARCHIVOS');
-          const fuenteCol = Object.keys(row).find((k) => normalize(k) === 'FUENTES');
+          const fuenteCol = Object.keys(row).find(
+            (k) => normalize(k) === 'FUENTES' || normalize(k) === 'FUENTE PRIMARIA' || normalize(k) === 'FUENTE',
+          );
           const medio1Col = Object.keys(row).find((k) => normalize(k) === 'MEDIO 1');
           const titular1Col = Object.keys(row).find((k) => normalize(k) === 'TITULAR 1');
           const medio2Col = Object.keys(row).find((k) => normalize(k) === 'MEDIO 2');
@@ -154,9 +172,9 @@ async function loadNewsRows(): Promise<NewsRow[]> {
             titular2: titular2Col ? (row[titular2Col] ?? '').trim() : '',
           });
         }
-        resolve(rows);
+        resolve({ rows, totalRows, error: '' });
       },
-      error: (err) => reject(err),
+      error: (err) => resolve({ rows: [], totalRows: 0, error: `Error al leer el CSV: ${err.message}` }),
     });
   });
 }
@@ -170,6 +188,7 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const { open } = useModal();
   const [sheetProjects, setSheetProjects] = useState<SheetProject[]>([]);
   const [newsRows, setNewsRows] = useState<NewsRow[]>([]);
+  const [newsDiagnostic, setNewsDiagnostic] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sheetFilter, setSheetFilter] = useState<FormatFilter>('Todos');
@@ -199,16 +218,18 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
       });
 
     if (format?.slug === 'noticias') {
-      loadNewsRows()
-        .then((rows) => {
-          if (!active) return;
-          setNewsRows(rows);
-        })
-        .catch(() => {
-          if (active) setError('No se pudo cargar el contenido. Inténtalo de nuevo.');
-        });
+      loadNewsRows().then((result) => {
+        if (!active) return;
+        setNewsRows(result.rows);
+        setNewsDiagnostic(
+          result.error
+            ? result.error
+            : `${result.rows.length} noticia(s) publicada(s) de ${result.totalRows} fila(s) leídas de la hoja.`,
+        );
+      });
     } else if (active) {
       setNewsRows([]);
+      setNewsDiagnostic('');
     }
 
     return () => {
@@ -231,7 +252,7 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
 
   if (!format) return null;
 
-  const total = filteredSheetProjects.length;
+  const total = showLocalNews ? visibleNews.length : filteredSheetProjects.length;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
@@ -272,6 +293,10 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
         </div>
       )}
 
+      {format?.slug === 'noticias' && newsDiagnostic && (
+        <p className="mt-3 text-center text-xs text-ink-400">Diagnóstico: {newsDiagnostic}</p>
+      )}
+
       {/* Content */}
       {loading ? (
         <div className="flex min-h-[40vh] items-center justify-center">
@@ -294,9 +319,9 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
         </div>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {showLocalNews &&
-            visibleNews.map((news, idx) => <NewsCard key={idx} news={news} />)}
-          {filteredSheetProjects.map((project, idx) => {
+          {showLocalNews
+            ? visibleNews.map((news, idx) => <NewsCard key={idx} news={news} />)
+            : filteredSheetProjects.map((project, idx) => {
             const isPodcastCard = normalize(project.formato) === 'PODCASTS' || normalize(project.formato) === 'PODCAST';
             return (
               <article key={idx} className="group flex flex-col overflow-hidden rounded-xl border border-paper-400/50 bg-paper-50 shadow-sm transition-all hover:shadow-md">
