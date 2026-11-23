@@ -32,8 +32,8 @@ function isPublished(value: string): boolean {
 }
 
 async function loadSheetProjects(): Promise<SheetProject[]> {
-  const cacheBust = `${SHEET_CSV_URL}&cacheBust=${Date.now()}`;
-  const res = await fetch(cacheBust, { cache: 'no-store' });
+  const url = `${SHEET_CSV_URL}&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
 
