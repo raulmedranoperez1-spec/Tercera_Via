@@ -10,11 +10,11 @@ import BrandLogo from '@/components/BrandLogo';
 
 interface MenuItem {
   label: string;
-  path: SectionPath;
+  path?: SectionPath;
   href?: string;
 }
 
-const formatItems = FORMATS.map((format) => ({
+const formatItems: MenuItem[] = FORMATS.map((format) => ({
   label: format.label,
   href: formatHref(format.slug),
 }));
@@ -236,7 +236,7 @@ function Dropdown({ items, onSelect }: { items: MenuItem[]; onSelect: (path: Sec
             {item.label}
           </a>
         ) : (
-          <button key={item.label} onClick={() => onSelect(item.path)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white">
+          <button key={item.label} onClick={() => item.path && onSelect(item.path)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white">
             <BookOpen size={15} className="text-brand-sand" />
             {item.label}
           </button>

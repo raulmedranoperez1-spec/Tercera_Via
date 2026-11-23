@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowUpDown, Loader2, MicOff, Newspaper } from 'lucide-react';
-import { FORMATS, findFormat, type FormatSlug } from '@/lib/formats';
+import { findFormat, type FormatSlug } from '@/lib/formats';
 import { supabase } from '@/lib/supabase';
 import ArticleCard from '@/components/ArticleCard';
 import PodcastCard from '@/components/PodcastCard';
@@ -23,7 +23,6 @@ const SORT_LABELS: Record<SortOrder, string> = {
 export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const format = findFormat(slug);
   const [articles, setArticles] = useState<ArticleSummary[]>([]);
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [podcasts, setPodcasts] = useState<PodcastSummary[]>([]);
   const [authors, setAuthors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -71,8 +70,8 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   }, [format]);
 
   const authorIds = useMemo(
-    () => [...new Set([...articles, ...projects, ...podcasts].map((item) => item.author_id))],
-    [articles, projects, podcasts],
+    () => [...new Set([...articles, ...podcasts].map((item) => item.author_id))],
+    [articles, podcasts],
   );
 
   useEffect(() => {
@@ -96,7 +95,6 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   }, [authorIds]);
 
   const sortedArticles = useMemo(() => sortItems(articles, sort), [articles, sort]);
-  const sortedProjects = useMemo(() => sortItems(projects, sort), [projects, sort]);
   const sortedPodcasts = useMemo(() => sortItems(podcasts, sort), [podcasts, sort]);
 
   if (!format) return null;

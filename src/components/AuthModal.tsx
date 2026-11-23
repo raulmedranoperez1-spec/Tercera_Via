@@ -1,104 +1,104 @@
-import React, { useState } from 'react';
-import { X, CheckCircle2, GraduationCap, BookOpen, MailCheck } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import { GraduationCap, BookOpen, Loader2, X } from 'lucide-react';
+import ModalShell from '@/components/ModalShell';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/authContext';
 
 interface AuthModalProps {
-  isOpen: boolean;
+  initialMode: 'login' | 'signup';
   onClose: () => void;
-  onAuthSuccess: (user: { name: string; email: string; role: 'Alumno FCOM' | 'Lector' }) => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess }) => {
-  const [isRegister, setIsRegister] = useState(true);
+function describeAuthError(error: unknown): string {
+  const msg = error instanceof Error ? error.message : '';
+  if (/already registered/i.test(msg)) return 'Ya existe una cuenta con este correo. Inicia sesión.';
+  if (/invalid login credentials/i.test(msg)) return 'Correo o contraseña incorrectos.';
+  if (/rate limit/i.test(msg)) return 'Demasiados intentos. Espera unos minutos.';
+  if (/password/i.test(msg) && /short|weak|at least/i.test(msg)) return 'La contraseña debe tener al menos 6 caracteres.';
+  return msg || 'No se pudo completar la operación. Inténtalo de nuevo.';
+}
+
+function isUniversityEmail(addr: string): boolean {
+  const clean = addr.trim().toLowerCase();
+  return clean.endsWith('@alum.us.es') || clean.endsWith('@us.es');
+}
+
+export default function AuthModal({ initialMode, onClose }: AuthModalProps) {
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
+  const { refreshProfile } = useAuth();
 
-  if (!isOpen) return null;
-
-  const isUniversityEmail = (addr: string) => {
-    const clean = addr.trim().toLowerCase();
-    return clean.endsWith('@alum.us.es') || clean.endsWith('@us.es');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
     const cleanEmail = email.trim().toLowerCase();
-
-    if (!cleanEmail || !password.trim() || (isRegister && !name.trim())) {
-      setError('Por favor, completa todos los campos.');
+    if (!cleanEmail || !password) {
+      setError('Completa el correo y la contraseña.');
       return;
+    }
+    if (mode === 'signup') {
+      if (name.trim().length < 2) {
+        setError('Escribe tu nombre y apellidos.');
+        return;
+      }
+      if (password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres.');
+        return;
+      }
+      if (password !== confirm) {
+        setError('Las contraseñas no coinciden.');
+        return;
+      }
     }
 
     setLoading(true);
-
-    const demoUser = {
-      name: name.trim() || cleanEmail.split('@')[0] || 'Usuario Demo',
-      email: cleanEmail,
-      role: (isUniversityEmail(cleanEmail) ? 'Alumno FCOM' : 'Lector') as 'Alumno FCOM' | 'Lector',
-    };
-
-    localStorage.setItem('tercera_via_user', JSON.stringify(demoUser));
-    window.dispatchEvent(new Event('storage'));
-
-    setLoading(false);
-    onAuthSuccess(demoUser);
-    onClose();
+    try {
+      if (mode === 'signup') {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: { data: { display_name: name.trim() } },
+        });
+        if (signUpError) throw signUpError;
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+        if (signInError) throw signInError;
+      }
+      await refreshProfile();
+      onClose();
+    } catch (err) {
+      setError(describeAuthError(err));
+      setLoading(false);
+    }
   };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-md rounded-xl bg-[#f8f3e9] border border-[#704c12]/30 p-6 shadow-2xl text-[#5d432c]">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1 hover:bg-[#ebdbc6] transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        {verificationSent ? (
-          <div className="py-6 text-center space-y-4">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#704c12]/10 text-[#704c12]">
-              <MailCheck className="h-6 w-6" />
-            </div>
-            <h3 className="font-serif text-xl font-bold">Revisa tu correo institucional</h3>
-            <p className="text-sm opacity-90">
-              Hemos enviado un enlace de verificación a <strong>{email}</strong>.
-              Ábrelo desde Outlook (revisa también <em>Correo no deseado</em>) para activar tu cuenta de <strong>Alumno FCOM</strong>.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setVerificationSent(false);
-                onClose();
-              }}
-              className="w-full rounded-lg bg-[#5d432c] px-4 py-2.5 text-sm font-medium text-[#f8f3e9] hover:opacity-90 transition-opacity"
-            >
-              Entendido
-            </button>
-          </div>
-        ) : (
-          <>
-            
-        <h2 className="font-serif text-2xl font-bold text-[#704c12] mb-1">
-          {isRegister ? 'Crear cuenta en La Tercera Vía' : 'Iniciar Sesión'}
-        </h2>
-        <p className="text-sm text-[#5d432c]/80 mb-5">
-          Usa tu correo <span className="font-semibold">@alum.us.es</span> para perfil de Redactor FCOM o cualquier correo como Lector.
+    <ModalShell title={mode === 'signup' ? 'Crear cuenta' : 'Iniciar sesión'} onClose={onClose}>
+      <div className="space-y-5">
+        <p className="text-sm text-black/70">
+          Usa tu correo <strong>@alum.us.es</strong> o <strong>@us.es</strong> para obtener el rol de redactor.
+          Con cualquier otro correo tendrás el rol de lector.
         </p>
 
         {email && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-[#ebdbc6]/70 px-3 py-2 text-xs font-medium">
+          <div className="flex items-center gap-2 rounded-lg bg-[#ebdbc6]/70 px-3 py-2 text-xs font-medium text-[#5d432c]">
             {isUniversityEmail(email) ? (
               <>
-                <GraduationCap className="h-4 w-4 text-[#704c12]" />
-                <span>Perfil detectado: <strong>Alumno FCOM / Redactor</strong></span>
+                <GraduationCap size={16} className="text-[#704c12]" />
+                <span>Perfil detectado: <strong>Redactor / Alumno FCOM</strong></span>
               </>
             ) : (
               <>
-                <BookOpen className="h-4 w-4 text-[#5d432c]" />
+                <BookOpen size={16} />
                 <span>Perfil detectado: <strong>Lector</strong></span>
               </>
             )}
@@ -106,71 +106,82 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegister && (
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-                Nombre y apellidos
-              </label>
+          {mode === 'signup' && (
+            <label className="block text-xs font-semibold uppercase tracking-wider text-black/60">
+              Nombre y apellidos
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ej. Laura Gómez"
-                className="w-full rounded-lg border border-[#704c12]/30 bg-white px-3 py-2 text-sm focus:border-[#704c12] focus:outline-none"
+                className="mt-1.5 w-full rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm text-black outline-none focus:border-[#704c12]"
               />
-            </div>
+            </label>
           )}
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-              Correo electrónico
-            </label>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-black/60">
+            Correo electrónico
             <input
               type="email"
+              autoComplete="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="usuario@alum.us.es"
-              className="w-full rounded-lg border border-[#704c12]/30 bg-white px-3 py-2 text-sm focus:border-[#704c12] focus:outline-none"
+              className="mt-1.5 w-full rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm text-black outline-none focus:border-[#704c12]"
             />
-          </div>
+          </label>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
-              Contraseña
-            </label>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-black/60">
+            Contraseña
             <input
               type="password"
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-[#704c12]/30 bg-white px-3 py-2 text-sm focus:border-[#704c12] focus:outline-none"
+              className="mt-1.5 w-full rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm text-black outline-none focus:border-[#704c12]"
             />
-          </div>
+          </label>
 
-          {error && <p className="text-xs font-medium text-red-700">{error}</p>}
+          {mode === 'signup' && (
+            <label className="block text-xs font-semibold uppercase tracking-wider text-black/60">
+              Confirmar contraseña
+              <input
+                type="password"
+                autoComplete="new-password"
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="••••••••"
+                className="mt-1.5 w-full rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm text-black outline-none focus:border-[#704c12]"
+              />
+            </label>
+          )}
+
+          {error && <p role="alert" className="text-sm text-accent-err">{error}</p>}
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#704c12] py-2.5 text-sm font-semibold text-white hover:bg-[#5d432c] transition-colors"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#704c12] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#5d432c] disabled:opacity-60"
           >
-            <CheckCircle2 className="h-4 w-4" />
-            {isRegister ? 'Completar registro' : 'Entrar ahora'}
+            {loading && <Loader2 size={16} className="animate-spin" />}
+            {mode === 'signup' ? 'Completar registro' : 'Entrar'}
           </button>
         </form>
 
-        <div className="mt-4 text-center text-xs">
+        <div className="text-center text-xs text-black/60">
           <button
             type="button"
-            onClick={() => setIsRegister(!isRegister)}
+            onClick={() => { setMode(mode === 'signup' ? 'login' : 'signup'); setError(''); }}
             className="underline hover:text-[#704c12]"
           >
-            {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+            {mode === 'signup' ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
           </button>
-        </div>           
-          </>
-        )}
-        
+        </div>
       </div>
-    </div>
+    </ModalShell>
   );
-};
+}

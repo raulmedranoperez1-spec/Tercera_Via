@@ -58,9 +58,9 @@ export default function ForumModerationPage() {
     setActionError('');
     try {
       if (type === 'thread') {
-        await moderateThread(id, action, action === 'limpio' ? null : undefined);
+        await moderateThread(id, action, action === 'limpio' ? null : null);
       } else {
-        await moderatePost(id, action, action === 'limpio' ? null : undefined);
+        await moderatePost(id, action, action === 'limpio' ? null : null);
       }
       load();
     } catch (err) {
