@@ -3,6 +3,8 @@ import { ExternalLink, Headphones, Loader2, Newspaper } from 'lucide-react';
 import Papa from 'papaparse';
 import { findFormat, type FormatSlug } from '@/lib/formats';
 import { sectionHref } from '@/lib/router';
+import { loadEscanerNews, type EscanerNews } from '@/lib/escanerNews';
+import EscanerNewsDetail from '@/components/EscanerNewsDetail';
 
 interface SheetProject {
   titulo: string;
@@ -109,6 +111,15 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sheetFilter, setSheetFilter] = useState<FormatFilter>('Todos');
+  const [localNews, setLocalNews] = useState<EscanerNews[]>([]);
+  const [openEscaner, setOpenEscaner] = useState<EscanerNews | null>(null);
+
+  useEffect(() => {
+    setLocalNews(loadEscanerNews());
+    const onStorage = () => setLocalNews(loadEscanerNews());
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const initialFilter = (FORMAT_FILTERS.includes(format?.label as FormatFilter) ? format?.label : 'Todos') as FormatFilter;
 
@@ -143,6 +154,13 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
     if (sheetFilter === 'Todos') return sheetProjects;
     return sheetProjects.filter((p) => normalize(p.formato) === normalize(sheetFilter));
   }, [sheetProjects, sheetFilter]);
+
+  const showLocalNews =
+    sheetFilter === 'Noticias' || (sheetFilter === 'Todos' && format?.slug === 'noticias');
+
+  if (openEscaner) {
+    return <EscanerNewsDetail news={openEscaner} />;
+  }
 
   if (!format) return null;
 
@@ -196,6 +214,31 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
         </div>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {showLocalNews &&
+            localNews.map((news) => (
+              <button
+                key={news.id}
+                onClick={() => setOpenEscaner(news)}
+                className="group flex flex-col overflow-hidden rounded-xl border border-paper-400/50 bg-paper-50 text-left shadow-sm transition-all hover:shadow-md"
+              >
+                <div className="aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-earth-800 to-earth-900">
+                  <div className="flex h-full w-full items-center justify-center">
+                    <span className="font-serif text-3xl text-paper-100/60">{news.titulo.charAt(0).toUpperCase()}</span>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col p-4">
+                  <span className="mb-2 inline-flex w-fit items-center rounded-full bg-earth-800/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-earth-800">
+                    Noticias · Escáner de Marcos
+                  </span>
+                  <h3 className="font-serif text-lg font-semibold leading-snug text-ink-800 transition-colors group-hover:text-[#704c12]">
+                    {news.titulo}
+                  </h3>
+                  <p className="mt-2 line-clamp-2 text-sm text-ink-500">
+                    Marco 1: {news.marco1.titular || '—'} · Marco 2: {news.marco2.titular || '—'}
+                  </p>
+                </div>
+              </button>
+            ))}
           {filteredSheetProjects.map((project, idx) => {
             const isPodcastCard = normalize(project.formato) === 'PODCASTS' || normalize(project.formato) === 'PODCAST';
             return (
