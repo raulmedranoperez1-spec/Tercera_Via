@@ -24,17 +24,20 @@ const fieldClass = 'w-full rounded-lg border border-black/15 bg-white px-4 py-3 
 
 interface GalleryItem {
   name: string;
-  dataUrl: string;
+  size: number;
+  previewUrl: string;
   caption: string;
 }
 
 interface FileItem {
   name: string;
-  dataUrl: string;
+  size: number;
   type: string;
 }
 
-interface PublishedProject {
+const STORAGE_KEY = 'tercera_via_projects';
+
+interface StoredProject {
   id: string;
   title: string;
   synopsis: string;
@@ -42,42 +45,31 @@ interface PublishedProject {
   track: Track;
   section: 'creativa' | 'informativa';
   link: string;
-  files: { name: string; type: string }[];
-  gallery: { name: string; caption: string }[];
+  files: { name: string; type: string; size: number }[];
+  gallery: { name: string; caption: string; size: number }[];
   author: string;
   authorId: string;
   createdAt: string;
   status: 'pendiente';
 }
 
-const STORAGE_KEY = 'tercera_via_projects';
-
-function loadProjects(): PublishedProject[] {
+function loadProjects(): StoredProject[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as PublishedProject[]) : [];
+    return raw ? (JSON.parse(raw) as StoredProject[]) : [];
   } catch {
     return [];
   }
 }
 
-function saveProject(project: PublishedProject): void {
+function saveProject(project: StoredProject): void {
   const existing = loadProjects();
   existing.unshift(project);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
   window.dispatchEvent(new Event('tercera-via-projects-updated'));
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
-    reader.readAsDataURL(file);
-  });
-}
-
-export function getPublishedProjects(): PublishedProject[] {
+export function getPublishedProjects(): StoredProject[] {
   return loadProjects();
 }
 
@@ -141,7 +133,7 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
   const updateExtraLink = (i: number, val: string) => setExtraLinks(extraLinks.map((l, idx) => (idx === i ? val : l)));
   const removeExtraLink = (i: number) => setExtraLinks(extraLinks.filter((_, idx) => idx !== i));
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
     setError('');
     for (const file of selected) {
@@ -149,13 +141,12 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
         setError('Cada archivo debe pesar menos de 50 MB.');
         return;
       }
-      const dataUrl = await readFileAsDataUrl(file);
-      setFiles((prev) => [...prev, { name: file.name, dataUrl, type: file.type }]);
     }
+    setFiles((prev) => [...prev, ...selected.map((file) => ({ name: file.name, size: file.size, type: file.type }))]);
     e.target.value = '';
   };
 
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
     setError('');
     for (const file of selected) {
@@ -167,15 +158,20 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
         setError('Cada imagen debe pesar menos de 10 MB.');
         return;
       }
-      const dataUrl = await readFileAsDataUrl(file);
-      setGallery((prev) => [...prev, { name: file.name, dataUrl, caption: '' }]);
     }
+    setGallery((prev) => [
+      ...prev,
+      ...selected.map((file) => ({ name: file.name, size: file.size, previewUrl: URL.createObjectURL(file), caption: '' })),
+    ]);
     e.target.value = '';
   };
 
   const updateCaption = (i: number, caption: string) =>
     setGallery(gallery.map((g, idx) => (idx === i ? { ...g, caption } : g)));
-  const removeGalleryItem = (i: number) => setGallery(gallery.filter((_, idx) => idx !== i));
+  const removeGalleryItem = (i: number) => {
+    URL.revokeObjectURL(gallery[i]?.previewUrl ?? '');
+    setGallery(gallery.filter((_, idx) => idx !== i));
+  };
   const removeFile = (i: number) => setFiles(files.filter((_, idx) => idx !== i));
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -208,7 +204,7 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
     const allLinks = [link.trim(), ...extraLinks.map((l) => l.trim()).filter(Boolean)];
     const section: 'creativa' | 'informativa' = format === 'noticias' ? 'informativa' : 'creativa';
 
-    const project: PublishedProject = {
+    const project: StoredProject = {
       id: `local-${Date.now()}`,
       title: title.trim(),
       synopsis: synopsis.trim(),
@@ -216,8 +212,8 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
       track,
       section,
       link: allLinks[0] ?? '',
-      files: tab === 'archivos' ? files.map((f) => ({ name: f.name, type: f.type })) : [],
-      gallery: tab === 'galeria' ? gallery.map((g) => ({ name: g.name, caption: g.caption })) : [],
+      files: tab === 'archivos' ? files.map((f) => ({ name: f.name, type: f.type, size: f.size })) : [],
+      gallery: tab === 'galeria' ? gallery.map((g) => ({ name: g.name, caption: g.caption, size: g.size })) : [],
       author: profile.display_name || profile.email.split('@')[0],
       authorId: session.user.id,
       createdAt: new Date().toISOString(),
@@ -383,7 +379,7 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
                 {gallery.map((g, i) => (
                   <div key={i} className="space-y-1">
                     <div className="relative overflow-hidden rounded-lg border border-black/10">
-                      <img src={g.dataUrl} alt={g.name} className="aspect-square w-full object-cover" />
+                      <img src={g.previewUrl} alt={g.name} className="aspect-square w-full object-cover" />
                       <button type="button" onClick={() => removeGalleryItem(i)} className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-black/50 shadow hover:text-accent-err">
                         <X size={12} />
                       </button>
