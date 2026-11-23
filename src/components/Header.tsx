@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { BookOpen, ChevronDown, LogOut, BadgeCheck, UserCircle, MessageCircle, Send, PenLine } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronRight, LogOut, BadgeCheck, UserCircle, MessageCircle, Send, PenLine } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { canSubmitWork, roleLabel, useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
 import { navigateTo, sectionHref, formatHref, profileHref, forumHref, codigoDeontologicoHref, type SectionPath } from '@/lib/router';
-import { FORMATS } from '@/lib/formats';
+import { FORMATS, type FormatSlug } from '@/lib/formats';
 import { supportTiers, type SupportTier } from '@/data/mockData';
 import BrandLogo from '@/components/BrandLogo';
 
@@ -14,10 +14,18 @@ interface MenuItem {
   href?: string;
 }
 
-const formatItems: MenuItem[] = FORMATS.map((format) => ({
-  label: format.label,
-  href: formatHref(format.slug),
-}));
+const creativeFormats: FormatSlug[] = ['articulos', 'ensayos', 'entrevistas', 'podcasts', 'reportajes', 'cronicas'];
+const informativeFormats: FormatSlug[] = ['noticias'];
+
+const creativeItems: MenuItem[] = creativeFormats.map((slug) => {
+  const format = FORMATS.find((f) => f.slug === slug)!;
+  return { label: format.label, href: formatHref(slug) };
+});
+
+const informativeItems: MenuItem[] = informativeFormats.map((slug) => {
+  const format = FORMATS.find((f) => f.slug === slug)!;
+  return { label: format.label, href: formatHref(slug) };
+});
 
 const styleItems: MenuItem[] = [
   { label: 'Código deontológico', path: '/', href: codigoDeontologicoHref() },
@@ -27,6 +35,7 @@ const subscriptionItems = ['Socio Mensual', 'Básica', 'Media', 'Premium', 'Prem
 
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<SupportTier | null>(null);
   const { session, profile, loading: authLoading } = useAuth();
   const canPublish = !!profile && canSubmitWork(profile.role);
@@ -39,6 +48,7 @@ export default function Header() {
 
   const goTo = (path: SectionPath) => {
     setOpenMenu(null);
+    setOpenSubmenu(null);
     navigateTo(path);
   };
 
@@ -49,6 +59,7 @@ export default function Header() {
 
   const openAuth = (mode: 'login' | 'signup') => {
     setOpenMenu(null);
+    setOpenSubmenu(null);
     open({ kind: 'auth', mode });
   };
 
@@ -63,9 +74,12 @@ export default function Header() {
 
         <div className="flex min-h-[76px] flex-wrap items-center justify-between gap-3 py-3">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="relative">
+            <div
+              className="relative"
+              onMouseLeave={() => { setOpenMenu(null); setOpenSubmenu(null); }}
+            >
               <button
-                onClick={() => setOpenMenu(openMenu === 'formatos' ? null : 'formatos')}
+                onClick={() => { setOpenMenu(openMenu === 'formatos' ? null : 'formatos'); setOpenSubmenu(null); }}
                 className="flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wide text-brand-graphite transition-colors hover:bg-brand-sand hover:text-brand-graphite sm:px-3 sm:text-sm"
                 aria-expanded={openMenu === 'formatos'}
               >
@@ -73,7 +87,44 @@ export default function Header() {
                 <ChevronDown size={15} className={`transition-transform ${openMenu === 'formatos' ? 'rotate-180' : ''}`} />
               </button>
               {openMenu === 'formatos' && (
-                <Dropdown items={formatItems} onSelect={goTo} />
+                <div className="absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-brand-sand/20 bg-brand-graphite p-2 shadow-2xl">
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setOpenSubmenu('creativa')}
+                  >
+                    <button
+                      onClick={() => setOpenSubmenu(openSubmenu === 'creativa' ? null : 'creativa')}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white"
+                    >
+                      <span className="flex items-center gap-2">
+                        <BookOpen size={15} className="text-brand-sand" />
+                        Parte Creativa
+                      </span>
+                      <ChevronRight size={14} className="text-brand-sand" />
+                    </button>
+                    {openSubmenu === 'creativa' && (
+                      <Submenu items={creativeItems} onSelect={goTo} onClose={() => { setOpenMenu(null); setOpenSubmenu(null); }} />
+                    )}
+                  </div>
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setOpenSubmenu('informativa')}
+                  >
+                    <button
+                      onClick={() => { setOpenMenu(null); setOpenSubmenu(null); navigateTo(formatHref('noticias')); }}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white"
+                    >
+                      <span className="flex items-center gap-2">
+                        <BookOpen size={15} className="text-brand-sand" />
+                        Parte Informativa
+                      </span>
+                      <ChevronRight size={14} className="text-brand-sand" />
+                    </button>
+                    {openSubmenu === 'informativa' && (
+                      <Submenu items={informativeItems} onSelect={goTo} onClose={() => { setOpenMenu(null); setOpenSubmenu(null); }} />
+                    )}
+                  </div>
+                </div>
               )}
             </div>
             <div className="relative">
@@ -228,6 +279,35 @@ function SubscriptionDetails({ tier, onClose }: { tier: SupportTier; onClose: ()
           </a>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Submenu({ items, onSelect, onClose }: { items: MenuItem[]; onSelect: (path: SectionPath) => void; onClose: () => void }) {
+  return (
+    <div className="absolute left-full top-0 z-30 ml-1 w-48 rounded-xl border border-brand-sand/20 bg-brand-graphite p-2 shadow-2xl">
+      {items.map((item) =>
+        item.href ? (
+          <a
+            key={item.label}
+            href={item.href}
+            onClick={onClose}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white"
+          >
+            <BookOpen size={15} className="text-brand-sand" />
+            {item.label}
+          </a>
+        ) : (
+          <button
+            key={item.label}
+            onClick={() => item.path && onSelect(item.path)}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-brand-paper/90 transition-colors hover:bg-brand-earth hover:text-brand-white"
+          >
+            <BookOpen size={15} className="text-brand-sand" />
+            {item.label}
+          </button>
+        ),
+      )}
     </div>
   );
 }

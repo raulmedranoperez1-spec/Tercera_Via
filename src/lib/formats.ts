@@ -30,6 +30,12 @@ export const FORMATS = [
     description: 'Investigaciones y piezas de largo recorrido sobre asuntos de interés público.',
   },
   {
+    slug: 'cronicas',
+    label: 'Crónicas',
+    dbValue: 'cronica',
+    description: 'Relatos vivos de lo que está pasando, contados desde el lugar de los hechos.',
+  },
+  {
     slug: 'noticias',
     label: 'Noticias',
     dbValue: 'noticia',
