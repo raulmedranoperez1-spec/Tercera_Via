@@ -39,6 +39,27 @@ function isPublished(value: string): boolean {
   return normalize(value) === 'SI';
 }
 
+const KNOWN_FORMATS = ['Artículos', 'Ensayos', 'Entrevistas', 'Podcasts', 'Reportajes', 'Crónicas', 'Noticias'];
+
+function detectFormato(row: Record<string, string>): string {
+  for (const key of Object.keys(row)) {
+    const normKey = normalize(key);
+    if (normKey.includes('CREATIVA') || normKey.includes('INFORMATIVA')) {
+      const val = (row[key] ?? '').trim();
+      const normVal = normalize(val);
+      const match = KNOWN_FORMATS.find((f) => normalize(f) === normVal);
+      if (match) return match;
+    }
+  }
+  for (const key of Object.keys(row)) {
+    const val = (row[key] ?? '').trim();
+    const normVal = normalize(val);
+    const match = KNOWN_FORMATS.find((f) => normalize(f) === normVal);
+    if (match) return match;
+  }
+  return '';
+}
+
 async function loadSheetProjects(): Promise<SheetProject[]> {
   const url = `${SHEET_CSV_URL}&t=${Date.now()}`;
   const res = await fetch(url, { cache: 'no-store' });
@@ -60,7 +81,6 @@ async function loadSheetProjects(): Promise<SheetProject[]> {
             (k) => normalize(k) === 'DESCRIPCION O RESUMEN' || normalize(k) === 'DESCRIPCION',
           );
           const archivoCol = Object.keys(row).find((k) => normalize(k) === 'SUBIR ARCHIVOS' || normalize(k) === 'ARCHIVOS');
-          const formatoCol = Object.keys(row).find((k) => normalize(k) === 'FORMATO');
 
           const titulo = tituloCol ? (row[tituloCol] ?? '').trim() : '';
           if (!titulo) continue;
@@ -69,7 +89,7 @@ async function loadSheetProjects(): Promise<SheetProject[]> {
             titulo,
             descripcion: descCol ? (row[descCol] ?? '').trim() : '',
             archivoUrl: archivoCol ? (row[archivoCol] ?? '').trim() : '',
-            formato: formatoCol ? (row[formatoCol] ?? '').trim() : '',
+            formato: detectFormato(row),
           });
         }
         resolve(projects);
