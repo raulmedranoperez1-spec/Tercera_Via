@@ -1,6 +1,10 @@
 {
   "projectId": "72208277",
   "functions": {
+    "admin": {
+      "hasChanged": false,
+      "hash": "9fb4b37b9e3295ae1bef567735b73e9fbd31246986e740ce238c069a3e6f3b66"
+    },
     "agent": {
       "hasChanged": false,
       "hash": "57ae8a4ea4f08b815c53c99f5e53def9ba6be482222dce86fedb4c677de8aa68"
@@ -9,17 +13,21 @@
       "hasChanged": false,
       "hash": "5c19f0ee782607d1556f887abe782fd34bbca46da2bb1b719f28c52cfbb630f2"
     },
+    "news-review": {
+      "hasChanged": false,
+      "hash": "03a4c39f0b0685dea46bb5b2318d35d157e69d99d75b0b7ab7ef72a18ca3d157"
+    },
     "send-email": {
       "hasChanged": false,
       "hash": "3c2ad777a8b68aea1bdf311c447b72d9ec42f82c10a5cd241a9b481d41ea9ea2"
     },
-    "admin": {
-      "hasChanged": false,
-      "hash": "9fb4b37b9e3295ae1bef567735b73e9fbd31246986e740ce238c069a3e6f3b66"
-    },
     "style-audit": {
       "hasChanged": false,
       "hash": "ec74b54275dafbe3f42641789b01d4c207a2c2dea520c2f8d01796d071181a74"
+    },
+    "projects-sheet": {
+      "hasChanged": false,
+      "hash": "6b639d9b3e4c96c31e24331adefbfc4a8828b3ddbe7c52a9c091177793880db0"
     }
   }
 }

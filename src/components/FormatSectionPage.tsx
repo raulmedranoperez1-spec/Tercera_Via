@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpDown, Loader2, MicOff, Newspaper } from 'lucide-react';
+import { ArrowUpDown, ExternalLink, Loader2, MicOff, Newspaper } from 'lucide-react';
 import { findFormat, type FormatSlug } from '@/lib/formats';
 import { supabase } from '@/lib/supabase';
 import ArticleCard from '@/components/ArticleCard';
@@ -7,6 +7,12 @@ import PodcastCard from '@/components/PodcastCard';
 import ContentGate from '@/components/ContentGate';
 import type { ArticleSummary, PodcastSummary } from '@/lib/writers';
 import { sectionHref } from '@/lib/router';
+
+interface SheetProject {
+  titulo: string;
+  descripcion: string;
+  archivoUrl: string;
+}
 
 interface FormatSectionPageProps {
   slug: FormatSlug;
@@ -24,11 +30,14 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const format = findFormat(slug);
   const [articles, setArticles] = useState<ArticleSummary[]>([]);
   const [podcasts, setPodcasts] = useState<PodcastSummary[]>([]);
+  const [sheetProjects, setSheetProjects] = useState<SheetProject[]>([]);
   const [authors, setAuthors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sort, setSort] = useState<SortOrder>('recent');
   const [playingPodcast, setPlayingPodcast] = useState<PodcastSummary | null>(null);
+
+  const isSheetDriven = format?.slug === 'articulos';
 
   useEffect(() => {
     if (!format) return;
@@ -38,6 +47,22 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
 
     const load = async () => {
       try {
+        if (isSheetDriven) {
+          const apiUrl = `${import.meta.env.VITE_SUPABASE_URL ?? 'https://fagililzingryplvnjtd.supabase.co'}/functions/v1/projects-sheet`;
+          const res = await fetch(apiUrl, {
+            headers: {
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY ?? 'sb_publishable_aR4QujoqD6kA-HA3-wif7w_eQpbq0_P'}`,
+            },
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          if (json.error) throw new Error(json.error);
+          if (!active) return;
+          setSheetProjects((json.projects ?? []) as SheetProject[]);
+          setLoading(false);
+          return;
+        }
+
         if (format.dbValue === 'podcast') {
           const { data, error: err } = await supabase
             .from('podcasts_public')
@@ -104,7 +129,7 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
     ? sortedPodcasts.map((p) => ({ id: p.id, title: p.title, author: authors[p.author_id] ?? 'Autor', date: p.published_at }))
     : sortedArticles.map((a) => ({ id: a.id, title: a.title, author: authors[a.author_id] ?? 'Autor', date: a.published_at }));
 
-  const total = isPodcast ? sortedPodcasts.length : sortedArticles.length;
+  const total = isSheetDriven ? sheetProjects.length : isPodcast ? sortedPodcasts.length : sortedArticles.length;
 
   const gateTier = isPodcast ? 'subscribe' : 'login';
 
@@ -115,7 +140,7 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#a87945]">La Tercera Vía</p>
         <h1 className="mt-3 font-serif text-4xl font-semibold text-earth-900 sm:text-5xl">{format.label}</h1>
         <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink-500">{format.description}</p>
-        {!isPodcast && (
+        {!isPodcast && !isSheetDriven && (
           <p className="mt-3 text-xs uppercase tracking-wider text-ink-400">
             Acceso con registro gratuito · {format.label}
           </p>
@@ -161,6 +186,41 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
           <a href={sectionHref('/')} className="mt-2 rounded-lg bg-[#704c12] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]">
             Volver al inicio
           </a>
+        </div>
+      ) : isSheetDriven ? (
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {sheetProjects.map((project, idx) => (
+            <article key={idx} className="group flex flex-col overflow-hidden rounded-xl border border-paper-400/50 bg-paper-50 shadow-sm transition-all hover:shadow-md">
+              <div className="aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-paper-300 to-paper-400">
+                <div className="flex h-full w-full items-center justify-center">
+                  <span className="font-serif text-3xl text-[#704c12]/30">{project.titulo?.charAt(0)?.toUpperCase() ?? 'A'}</span>
+                </div>
+              </div>
+              <div className="flex flex-1 flex-col p-4">
+                <h3 className="font-serif text-lg font-semibold leading-snug text-ink-800 transition-colors group-hover:text-[#704c12]">
+                  {project.titulo}
+                </h3>
+                {project.descripcion && (
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-500">
+                    {project.descripcion}
+                  </p>
+                )}
+                {project.archivoUrl ? (
+                  <a
+                    href={project.archivoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#704c12] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
+                  >
+                    <ExternalLink size={15} />
+                    Ver documento
+                  </a>
+                ) : (
+                  <span className="mt-auto text-xs text-ink-400">Sin documento</span>
+                )}
+              </div>
+            </article>
+          ))}
         </div>
       ) : isPodcast ? (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
