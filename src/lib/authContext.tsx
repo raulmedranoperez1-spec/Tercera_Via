@@ -25,6 +25,7 @@ export interface AuthState {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  profileError: string;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }

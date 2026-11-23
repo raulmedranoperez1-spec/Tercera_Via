@@ -74,7 +74,7 @@ export function getPublishedProjects(): StoredProject[] {
 }
 
 export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: SubmitWorkModalProps) {
-  const { session, profile } = useAuth();
+  const { session, profile, loading, profileError, refreshProfile } = useAuth();
   const { open } = useModal();
   const [tab, setTab] = useState<TabKind>('enlaces');
   const [format, setFormat] = useState<FormatSlug>(formatSlug ?? FORMATS[0].slug);
@@ -108,7 +108,33 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
   if (!profile) {
     return (
       <ModalShell title="Publica tu proyecto" onClose={onClose}>
-        <p className="text-sm text-black/70">Cargando tu perfil...</p>
+        {loading ? (
+          <p className="text-sm text-black/70">Cargando tu perfil...</p>
+        ) : profileError ? (
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-red-700">{profileError}</p>
+            <button
+              type="button"
+              onClick={() => refreshProfile()}
+              className="w-full rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-black/70">
+              No se pudo cargar tu perfil. Es posible que haya un problema de permisos o conexión.
+            </p>
+            <button
+              type="button"
+              onClick={() => refreshProfile()}
+              className="w-full rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
       </ModalShell>
     );
   }
