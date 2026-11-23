@@ -5,6 +5,7 @@ import { FORMATS, TRACK_OPTIONS, type FormatSlug, type Track } from '@/lib/forma
 import { isHttpUrl } from '@/lib/url';
 import { useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
+import { supabase } from '@/lib/supabase';
 
 interface SubmitWorkModalProps {
   formatSlug?: FormatSlug;
@@ -73,8 +74,19 @@ export function getPublishedProjects(): StoredProject[] {
   return loadProjects();
 }
 
+async function ensureProfileInBackground(userId: string, email: string, displayName: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({ id: userId, email, display_name: displayName }, { onConflict: 'id' });
+    if (error) console.error('[ensureProfileInBackground] upsert error:', error);
+  } catch (err) {
+    console.error('[ensureProfileInBackground] network error:', err);
+  }
+}
+
 export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: SubmitWorkModalProps) {
-  const { session, profile, loading, profileError, refreshProfile } = useAuth();
+  const { session, profile } = useAuth();
   const { open } = useModal();
   const [tab, setTab] = useState<TabKind>('enlaces');
   const [format, setFormat] = useState<FormatSlug>(formatSlug ?? FORMATS[0].slug);
@@ -105,39 +117,9 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
     );
   }
 
-  if (!profile) {
-    return (
-      <ModalShell title="Publica tu proyecto" onClose={onClose}>
-        {loading ? (
-          <p className="text-sm text-black/70">Cargando tu perfil...</p>
-        ) : profileError ? (
-          <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-red-700">{profileError}</p>
-            <button
-              type="button"
-              onClick={() => refreshProfile()}
-              className="w-full rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black"
-            >
-              Reintentar
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-black/70">
-              No se pudo cargar tu perfil. Es posible que haya un problema de permisos o conexión.
-            </p>
-            <button
-              type="button"
-              onClick={() => refreshProfile()}
-              className="w-full rounded-lg bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-[#a87945] hover:text-black"
-            >
-              Reintentar
-            </button>
-          </div>
-        )}
-      </ModalShell>
-    );
-  }
+  const authorName = profile?.display_name || session.user.email?.split('@')[0] || 'Usuario';
+  const authorEmail = session.user.email ?? '';
+  const authorId = session.user.id;
 
   if (done) {
     return (
@@ -240,18 +222,21 @@ export default function SubmitWorkModal({ formatSlug, onSubmitted, onClose }: Su
       link: allLinks[0] ?? '',
       files: tab === 'archivos' ? files.map((f) => ({ name: f.name, type: f.type, size: f.size })) : [],
       gallery: tab === 'galeria' ? gallery.map((g) => ({ name: g.name, caption: g.caption, size: g.size })) : [],
-      author: profile.display_name || profile.email.split('@')[0],
-      authorId: session.user.id,
+      author: authorName,
+      authorId,
       createdAt: new Date().toISOString(),
       status: 'pendiente',
     };
+
+    ensureProfileInBackground(authorId, authorEmail, authorName);
 
     try {
       saveProject(project);
       setSaving(false);
       setDone(true);
       onSubmitted?.();
-    } catch {
+    } catch (err) {
+      console.error('[SubmitWorkModal] error al guardar el proyecto:', err);
       setSaving(false);
       setError('No se pudo guardar el proyecto. Inténtalo de nuevo.');
     }
