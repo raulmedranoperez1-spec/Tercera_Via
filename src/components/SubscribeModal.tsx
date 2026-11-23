@@ -53,9 +53,12 @@ export default function SubscribeModal({ onClose }: SubscribeModalProps) {
         ))}
       </div>
 
-      <p className="mt-5 text-center text-xs text-ink-400">
-        Compromiso de no injerencia editorial: ningún apoyo condiciona el contenido.
-      </p>
+      <div className="mt-5 rounded-lg border border-[#704c12]/20 bg-[#704c12]/5 px-4 py-3 text-center text-sm leading-relaxed text-[#5d432c]">
+        Si quieres suscribirte en Tercera Vía escríbenos al siguiente correo:{' '}
+        <a href="mailto:terceravia65@gmail.com" className="font-semibold text-[#704c12] underline">
+          terceravia65@gmail.com
+        </a>
+      </div>
     </ModalShell>
   );
 }

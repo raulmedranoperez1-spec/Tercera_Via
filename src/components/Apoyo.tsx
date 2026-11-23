@@ -141,15 +141,16 @@ function TierCard({
         ))}
       </ul>
 
-      <button
-        className={`mt-8 rounded-full px-5 py-3 text-sm font-medium transition-all ${
-          tier.highlighted
-            ? 'bg-paper-100 text-earth-900 hover:bg-paper-200'
-            : 'bg-earth-800 text-paper-100 hover:bg-earth-900'
+      <div
+        className={`mt-8 rounded-xl px-5 py-4 text-center text-sm leading-relaxed ${
+          tier.highlighted ? 'bg-paper-100/15 text-paper-200' : 'bg-earth-800/5 text-ink-600'
         }`}
       >
-        {tier.cta}
-      </button>
+        Si quieres suscribirte en Tercera Vía escríbenos al siguiente correo:{' '}
+        <a href="mailto:terceravia65@gmail.com" className={`font-semibold underline ${tier.highlighted ? 'text-paper-100' : 'text-earth-800'}`}>
+          terceravia65@gmail.com
+        </a>
+      </div>
     </div>
   );
 }

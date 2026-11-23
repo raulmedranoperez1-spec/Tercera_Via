@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, ChevronDown, LogOut, BadgeCheck, UserCircle, MessageCircle, Send } from 'lucide-react';
+import { BookOpen, ChevronDown, LogOut, BadgeCheck, UserCircle, MessageCircle, Send, PenLine } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { canSubmitWork, roleLabel, useAuth } from '@/lib/authContext';
 import { useModal } from '@/lib/modalContext';
@@ -96,6 +96,13 @@ export default function Header() {
               <MessageCircle size={15} />
               Foro
             </a>
+            <button
+              onClick={() => { setOpenMenu(null); open({ kind: 'share' }); }}
+              className="flex items-center gap-1.5 rounded-md bg-brand-earth px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-brand-paper transition-colors hover:bg-brand-graphite sm:px-3 sm:text-sm"
+            >
+              <PenLine size={14} />
+              <span className="hidden xs:inline sm:inline">Publica tu proyecto</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
@@ -214,13 +221,12 @@ function SubscriptionDetails({ tier, onClose }: { tier: SupportTier; onClose: ()
         <ul className="mt-6 space-y-3 text-sm text-brand-graphite/85">
           {tier.features.map((feature) => <li key={feature}>• {feature}</li>)}
         </ul>
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-8 w-full rounded-xl bg-brand-earth px-5 py-3 text-sm font-semibold uppercase tracking-wide text-brand-paper transition-colors hover:bg-brand-graphite"
-        >
-          Adquirir
-        </button>
+        <div className="mt-8 rounded-xl bg-black/5 px-5 py-4 text-center text-sm leading-relaxed text-brand-graphite">
+          Si quieres suscribirte en Tercera Vía escríbenos al siguiente correo:{' '}
+          <a href="mailto:terceravia65@gmail.com" className="font-semibold text-brand-earth underline">
+            terceravia65@gmail.com
+          </a>
+        </div>
       </div>
     </div>
   );

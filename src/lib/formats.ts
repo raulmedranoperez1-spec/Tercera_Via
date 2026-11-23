@@ -29,6 +29,12 @@ export const FORMATS = [
     dbValue: 'reportaje',
     description: 'Investigaciones y piezas de largo recorrido sobre asuntos de interés público.',
   },
+  {
+    slug: 'noticias',
+    label: 'Noticias',
+    dbValue: 'noticia',
+    description: 'Información de actualidad verificada y contrastada con fuentes primarias.',
+  },
 ] as const;
 
 export type FormatDef = (typeof FORMATS)[number];
