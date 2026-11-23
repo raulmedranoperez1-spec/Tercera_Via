@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpDown, ExternalLink, Loader2, MicOff, Newspaper } from 'lucide-react';
+import { ArrowUpDown, ExternalLink, Headphones, Loader2, MicOff, Newspaper } from 'lucide-react';
 import Papa from 'papaparse';
 import { findFormat, type FormatSlug } from '@/lib/formats';
 import { supabase } from '@/lib/supabase';
@@ -13,7 +13,20 @@ interface SheetProject {
   titulo: string;
   descripcion: string;
   archivoUrl: string;
+  formato: string;
 }
+
+const FORMAT_FILTERS = [
+  'Todos',
+  'Artículos',
+  'Ensayos',
+  'Entrevistas',
+  'Podcasts',
+  'Reportajes',
+  'Crónicas',
+] as const;
+
+type FormatFilter = (typeof FORMAT_FILTERS)[number];
 
 const SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vQSa6mOIF9UmJwpabYHpwnEoxH_ILuOiIjmyE6BFGKGQW2rc7P3IlUA1uxwkRuH_XhIAYtu5y59lzQ0/pub?output=csv';
@@ -52,6 +65,7 @@ async function loadSheetProjects(): Promise<SheetProject[]> {
             (k) => normalize(k) === 'DESCRIPCION O RESUMEN' || normalize(k) === 'DESCRIPCION',
           );
           const archivoCol = Object.keys(row).find((k) => normalize(k) === 'SUBIR ARCHIVOS' || normalize(k) === 'ARCHIVOS');
+          const formatoCol = Object.keys(row).find((k) => normalize(k) === 'FORMATO');
 
           const titulo = tituloCol ? (row[tituloCol] ?? '').trim() : '';
           if (!titulo) continue;
@@ -60,6 +74,7 @@ async function loadSheetProjects(): Promise<SheetProject[]> {
             titulo,
             descripcion: descCol ? (row[descCol] ?? '').trim() : '',
             archivoUrl: archivoCol ? (row[archivoCol] ?? '').trim() : '',
+            formato: formatoCol ? (row[formatoCol] ?? '').trim() : '',
           });
         }
         resolve(projects);
@@ -91,6 +106,7 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
   const [error, setError] = useState('');
   const [sort, setSort] = useState<SortOrder>('recent');
   const [playingPodcast, setPlayingPodcast] = useState<PodcastSummary | null>(null);
+  const [sheetFilter, setSheetFilter] = useState<FormatFilter>('Todos');
 
   const isSheetDriven = format?.slug === 'articulos';
 
@@ -176,7 +192,12 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
     ? sortedPodcasts.map((p) => ({ id: p.id, title: p.title, author: authors[p.author_id] ?? 'Autor', date: p.published_at }))
     : sortedArticles.map((a) => ({ id: a.id, title: a.title, author: authors[a.author_id] ?? 'Autor', date: a.published_at }));
 
-  const total = isSheetDriven ? sheetProjects.length : isPodcast ? sortedPodcasts.length : sortedArticles.length;
+  const filteredSheetProjects = useMemo(() => {
+    if (sheetFilter === 'Todos') return sheetProjects;
+    return sheetProjects.filter((p) => normalize(p.formato) === normalize(sheetFilter));
+  }, [sheetProjects, sheetFilter]);
+
+  const total = isSheetDriven ? filteredSheetProjects.length : isPodcast ? sortedPodcasts.length : sortedArticles.length;
 
   const gateTier = isPodcast ? 'subscribe' : 'login';
 
@@ -235,40 +256,65 @@ export default function FormatSectionPage({ slug }: FormatSectionPageProps) {
           </a>
         </div>
       ) : isSheetDriven ? (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sheetProjects.map((project, idx) => (
-            <article key={idx} className="group flex flex-col overflow-hidden rounded-xl border border-paper-400/50 bg-paper-50 shadow-sm transition-all hover:shadow-md">
-              <div className="aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-paper-300 to-paper-400">
-                <div className="flex h-full w-full items-center justify-center">
-                  <span className="font-serif text-3xl text-[#704c12]/30">{project.titulo?.charAt(0)?.toUpperCase() ?? 'A'}</span>
-                </div>
-              </div>
-              <div className="flex flex-1 flex-col p-4">
-                <h3 className="font-serif text-lg font-semibold leading-snug text-ink-800 transition-colors group-hover:text-[#704c12]">
-                  {project.titulo}
-                </h3>
-                {project.descripcion && (
-                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-500">
-                    {project.descripcion}
-                  </p>
-                )}
-                {project.archivoUrl ? (
-                  <a
-                    href={project.archivoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#704c12] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
-                  >
-                    <ExternalLink size={15} />
-                    Ver documento
-                  </a>
-                ) : (
-                  <span className="mt-auto text-xs text-ink-400">Sin documento</span>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
+        <>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {FORMAT_FILTERS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setSheetFilter(tab)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  sheetFilter === tab
+                    ? 'bg-[#704c12] text-white'
+                    : 'border border-paper-400 bg-paper-50 text-ink-600 hover:border-[#704c12]/40 hover:text-[#704c12]'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredSheetProjects.map((project, idx) => {
+              const isPodcastCard = normalize(project.formato) === 'PODCASTS' || normalize(project.formato) === 'PODCAST';
+              return (
+                <article key={idx} className="group flex flex-col overflow-hidden rounded-xl border border-paper-400/50 bg-paper-50 shadow-sm transition-all hover:shadow-md">
+                  <div className="aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-paper-300 to-paper-400">
+                    <div className="flex h-full w-full items-center justify-center">
+                      <span className="font-serif text-3xl text-[#704c12]/30">{project.titulo?.charAt(0)?.toUpperCase() ?? 'A'}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-1 flex-col p-4">
+                    {project.formato && (
+                      <span className="mb-2 inline-flex w-fit items-center rounded-full bg-[#704c12]/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-[#704c12]">
+                        {project.formato}
+                      </span>
+                    )}
+                    <h3 className="font-serif text-lg font-semibold leading-snug text-ink-800 transition-colors group-hover:text-[#704c12]">
+                      {project.titulo}
+                    </h3>
+                    {project.descripcion && (
+                      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-500">
+                        {project.descripcion}
+                      </p>
+                    )}
+                    {project.archivoUrl ? (
+                      <a
+                        href={project.archivoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#704c12] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5d432c]"
+                      >
+                        {isPodcastCard ? <Headphones size={15} /> : <ExternalLink size={15} />}
+                        {isPodcastCard ? 'Escuchar podcast' : 'Ver documento'}
+                      </a>
+                    ) : (
+                      <span className="mt-auto text-xs text-ink-400">Sin documento</span>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
       ) : isPodcast ? (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sortedPodcasts.map((podcast) => (
